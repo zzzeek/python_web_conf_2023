@@ -5,3 +5,4 @@
 **/*.db
 **/.venv
 dist
+*.egg-info

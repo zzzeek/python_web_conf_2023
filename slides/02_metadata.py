@@ -1,206 +1,107 @@
 ### slide::
-### title:: Schema and MetaData
-# The structure of a relational schema is represented in Python
-# using MetaData, Table, and other objects.
+### title:: ORM Centric Schema and MetaData
+# SQLAlchemy represents the structure of a relational schema
+# using the concept of **table metadata**.   In most SQLAlchemy
+# applications, table metadata is **declared** using ORM models,
+# which are Python classes with attributes that represent columns
 
-from sqlalchemy import MetaData
-from sqlalchemy import Table, Column
-from sqlalchemy import Integer, String
-from sqlalchemy import select
+from typing import List
+from typing import Optional
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import MappedAsDataclass
+from datetime import datetime
 
-metadata = MetaData()
-user_table = Table(
-    "user_account",
-    metadata,
-    Column("id", Integer, primary_key=True),
-    Column("username", String(50), nullable=False),
-    Column("fullname", String(255)),
-)
+class Base(MappedAsDataclass, DeclarativeBase):
+    pass
 
-### slide::
-# Table provides a single point of information regarding
-# the structure of a table in a schema.
 
-user_table.name
+class User(Base):
+    __tablename__ = "user_account"
 
-### slide:: i
-# The .c. attribute of Table is an associative array
-# of Column objects, keyed on name.
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
+    name: Mapped[str]
+    fullname: Mapped[Optional[str]]
+    created_at: Mapped[datetime] = mapped_column(default_factory=datetime.utcnow)
 
-user_table.c.username
-
-### slide:: i
-# It's a bit like a Python dictionary but not totally.
-
-print(user_table.c)
 
 ### slide::
-# Column itself has information about each Column, such as
-# name and type
-user_table.c.username.name
-user_table.c.username.type
+# The User class is called a **Declarative Mapped Class**.   We've used
+# MappedAsDataclass mixin, so this class is a standard Python dataclass,
+# which we can construct using normal dataclass semantics:
 
-### slide:: i
-# Table has other information available, such as the collection
-# of columns which comprise the table's primary key.
-user_table.primary_key
+User("spongebob", "Spongebob Squarepants")
+
 
 ### slide::
-# The Table object is at the core of the SQL expression
-# system - this is a quick preview of that.
-print(select(user_table))
+# The Declarative Mapped Class also sets up an internal structure called
+# **table metadata**.  This consists of a type of object called
+# Table, and we see it on our mapped class by looking
+# at an attribute called __table__:
+
+
+User.__table__
+
+
+### slide::
+# Table is part of SQLAlchemy's public API, and we can make Table objects
+# directly.  However, using ORM Declarative models to declare
+# Table definitions has the advantage of integration with pep-484 typing,
+# both for declaration as well as providing type information for database
+# results, and it will also set us up to be ready for the ORM sections
+# later.
+
+
+### slide::
+# The Table knows all about what a real database table in the database
+# looks like.  It has a collection of "columns":
+
+list(User.__table__.c)
+
+### slide:: i
+# it also holds onto "constraints", the most basic of which is the primary
+# key constraint:
+
+User.__table__.primary_key
+
+
 
 ### slide:: p
-# Table and MetaData objects can be used to generate a schema
-# in a database; MetaData features the create_all() method.
+# We can put together the Engine we did in the previous section with this
+# new table-defining DeclarativeMappedClass to emit CREATE TABLE
+# statements in a database:
+
 from sqlalchemy import create_engine
 
-engine = create_engine("sqlite://")
+engine = create_engine("sqlite://", echo=True)
 
 with engine.begin() as conn:
-    metadata.create_all(conn)
-
-### slide:: p
-# Types are represented using objects such as String, Integer,
-# DateTime.  These objects can be specified as "class keywords",
-# or can be instantiated with arguments.
-
-from sqlalchemy import String, Numeric, DateTime, Enum
-
-fancy_table = Table(
-    "fancy",
-    metadata,
-    Column("key", String(50), primary_key=True),
-    Column("timestamp", DateTime),
-    Column("amount", Numeric(10, 2)),
-    Column("type", Enum("a", "b", "c")),
-)
-
-with engine.begin() as conn:
-    fancy_table.create(conn)
-
-### slide:: p
-# at this point, the two Table objects we've created are part of a collection
-# in the MetaData object called .tables
-metadata.tables.keys()
-metadata.tables['user_account']
+    Base.metadata.create_all(conn)
 
 
-### slide:: p
-# table metadata also allows for constraints and indexes.
-# ForeignKey is used to link one column to a remote primary
-# key.  Note we can omit the datatype for a ForeignKey column.
+### slide::
+# If we want to have two tables related to each other, we use a
+# construct called ForeignKey
+
 
 from sqlalchemy import ForeignKey
 
-addresses_table = Table(
-    "email_address",
-    metadata,
-    Column("id", Integer, primary_key=True),
-    Column("email_address", String(100), nullable=False),
-    Column("user_id", ForeignKey("user_account.id"), nullable=False),
-)
+
+class Address(Base):
+    __tablename__ = "address"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email_address: Mapped[str]
+    user_id = mapped_column(ForeignKey("user_account.id"))
+
 
 with engine.begin() as conn:
-    addresses_table.create(conn)
-
-### slide::
-# ForeignKey is a shortcut for ForeignKeyConstraint,
-# which should be used for composite references.
-
-from sqlalchemy import ForeignKeyConstraint
-from sqlalchemy import Text
-
-story_table = Table(
-    "story",
-    metadata,
-    Column("story_id", Integer, primary_key=True),
-    Column("version_id", Integer, primary_key=True),
-    Column("headline", String(100), nullable=False),
-    Column("body", Text),
-)
-
-published_table = Table(
-    "published",
-    metadata,
-    Column("pub_id", Integer, primary_key=True),
-    Column("pub_timestamp", DateTime, nullable=False),
-    Column("story_id", Integer),
-    Column("version_id", Integer),
-    ForeignKeyConstraint(
-        ["story_id", "version_id"], ["story.story_id", "story.version_id"]
-    ),
-)
-
-### slide:: p
-# create_all() by default checks for tables existing already
-
-with engine.begin() as conn:
-    metadata.create_all(conn)
+    Base.metadata.create_all(conn)
 
 
-### slide:: p
-### title:: Reflection
-# 'reflection' refers to loading Table objects based on
-# reading from an existing database.
-metadata2 = MetaData()
 
-with engine.connect() as conn:
-    user_reflected = Table("user_account", metadata2, autoload_with=conn)
-
-
-### slide:: p
-# the user_reflected object is now filled in with all the columns
-# and constraints and is ready to use
-
-print(user_reflected.c)
-print(user_reflected.primary_key)
-print(select(user_reflected))
-
-### slide::
-# Information about a database at a more specific level is available
-# using the Inspector object.
-
-from sqlalchemy import inspect
-
-# inspector will work with an engine or a conneciton.
-# no plans to change that :)
-inspector = inspect(engine)
-
-### slide:: p
-# the inspector provides things like table names:
-inspector.get_table_names()
-
-### slide:: p
-# column information
-inspector.get_columns("email_address")
-
-### slide:: p
-# constraints
-inspector.get_foreign_keys("email_address")
-
-
-### slide:: p
-### title:: Reflecting an entire schema
-# The MetaData object also includes a feature that will reflect all the
-# tables in a particular schema at once.
-
-metadata3 = MetaData()
-with engine.connect() as conn:
-    metadata3.reflect(conn)
-
-### slide::
-# the Table objects are then in the metadata.tables collection
-
-story, published = metadata3.tables['story'], metadata3.tables['published']
-
-story
-published
-
-### slide:: i
-# ready to use
-
-print(select(story).join(published))
 
 ### slide::
 ### title:: Questions?

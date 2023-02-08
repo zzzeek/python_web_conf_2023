@@ -39,11 +39,10 @@ with e.begin() as conn:
 ### title:: Engine Basics
 # create_engine() builds a *factory* for database connections.
 # Below we create an engine that will connect to a SQLite database.
-# "future" means we want the full 2.0 behavior.
 
 from sqlalchemy import create_engine
 
-engine = create_engine("sqlite:///some.db", future=True)
+engine = create_engine("sqlite:///some.db")
 
 
 ### slide::
@@ -154,29 +153,6 @@ with engine.connect() as connection:
     # end of inner block: commits transaction, or rollback if exception
  # end of outer block: releases connection to the connection pool
 
-
-### slide:: p
-# transactions support "nesting", which is implemented using the
-# SAVEPOINT construct.
-
-with engine.connect() as connection:
-    with connection.begin():
-        savepoint = connection.begin_nested()
-        connection.execute(
-            text("update employee_of_month set emp_name = :emp_name"),
-            {"emp_name": "patrick"},
-        )
-        savepoint.rollback()  # sorry patrick
-
-        with connection.begin_nested() as savepoint:
-            connection.execute(
-                text("update employee_of_month set emp_name = :emp_name"),
-                {"emp_name": "spongebob"},
-            )
-            # releases savepoint
-
-        # commits transaction, or rollback if exception
-    # releases connection to the connection pool
 
 ### slide:: p
 # most DBAPIs support autocommit now, which is why SQLAlchemy no longer
