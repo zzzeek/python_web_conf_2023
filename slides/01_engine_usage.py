@@ -3,37 +3,6 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy import text
 
-if os.path.exists("some.db"):
-    os.remove("some.db")
-e = create_engine("sqlite:///some.db")
-with e.begin() as conn:
-    conn.execute(
-        text(
-            """
-        create table employee (
-            emp_id integer primary key,
-            emp_name varchar
-        )
-    """
-        )
-    )
-
-    conn.execute(
-        text(
-            """
-        create table employee_of_month (
-            emp_id integer primary key,
-            emp_name varchar
-        )
-    """
-        )
-    )
-
-    conn.execute(
-        text("insert into employee(emp_name) values (:name)"),
-        [{"name": "spongebob"}, {"name": "sandy"}, {"name": "squidward"}],
-    )
-
 
 ### slide::
 ### title:: Engine Basics
@@ -42,7 +11,7 @@ with e.begin() as conn:
 
 from sqlalchemy import create_engine
 
-engine = create_engine("sqlite:///some.db", echo=True)
+engine = create_engine("sqlite://", echo=True)
 
 
 ### slide::
@@ -55,7 +24,7 @@ connection
 
 ### slide::
 # The Connection is a so-called **proxy** for a DBAPI connection.  We can
-# see it by peeking at the .connection attribute, then .connection again
+# see it by peeking at the .connection.driver_connection attribute
 
 connection.connection.driver_connection
 
@@ -77,7 +46,7 @@ row = result.first()
 ### slide:: i
 # the row looks and acts mostly like a named tuple
 row
-row[1]
+row[0]
 row.greeting
 
 ### slide::
@@ -86,22 +55,21 @@ row.greeting
 row._mapping["greeting"]
 
 
-stmt = text("select id, greeting from (values (1, 'hello'), (2, 'hola'), (3, 'bonjour'))")
-result = connection.execute(stmt)
-
-
-
 ### slide:: p
 # common idiomatic Python patterns including iteration and tuple
 # assignment are available (and likely the most common usage)
-result = connection.execute(text("select * from (values (1, 'hello'), (2, 'hola'), (3, 'bonjour'))"))
+result = connection.execute(
+    text("select * from (values (1, 'hello'), (2, 'hola'), (3, 'bonjour'))")
+)
 for id_, greeting in result:
     print(f"id: {id_}   greeting: {greeting}")
 
-### slide:: pi
+### slide:: p
 # there's also other methods like all().   More methods will be discussed
 # later.
-result = connection.execute(text("select * from (values (1, 'hello'), (2, 'hola'), (3, 'bonjour'))"))
+result = connection.execute(
+    text("select * from (values (1, 'hello'), (2, 'hola'), (3, 'bonjour'))")
+)
 result.all()
 
 ### slide::
@@ -116,7 +84,7 @@ connection.close()
 # using context managers.
 
 with engine.connect() as connection:
-    rows = connection.execute(text("select 'hello' as greeting")).all()
+    print(connection.execute(text("select 'hello' as greeting")).all())
 
 ### slide:: p
 ### title:: transactions, committing
@@ -126,11 +94,16 @@ with engine.connect() as connection:
 # a transaction, SQLAlchemy will never commit it automatically.   The usual
 # way to commit is called "commit as you go"
 
-
 with engine.connect() as connection:
     connection.execute(
-        text("insert into employee_of_month (emp_name) values (:emp_name)"),
-        {"emp_name": "sandy"},
+        text("create table employee (emp_id integer primary key, emp_name varchar, fullname varchar)")
+    )
+
+    insert_stmt = text("insert into employee(emp_name, fullname) values (:name, :fullname)")
+
+    connection.execute(
+        insert_stmt,
+        {"name": "spongebob", "fullname": "Spongebob Squarepants"}
     )
     connection.commit()
 
@@ -141,9 +114,10 @@ with engine.connect() as connection:
 
 with engine.begin() as connection:
     connection.execute(
-        text("insert into employee_of_month (emp_name) values (:emp_name)"),
-        {"emp_name": "squidward"},
+        insert_stmt,
+        {"name": "patrick", "fullname": "Patrick Star"}
     )
+
  # end of block: commits transaction, releases connection back to the
  # connection pool. rolls back if there is an exception before re-throwing
 
@@ -154,31 +128,22 @@ with engine.begin() as connection:
 with engine.connect() as connection:
     with connection.begin():
         connection.execute(
-            text("update employee_of_month set emp_name = :emp_name"),
-            {"emp_name": "squidward"},
+            insert_stmt,
+            {"name": "krabs", "fullname": "Mr. Krabs"}
         )
     # end of inner block: commits transaction, or rollback if exception
  # end of outer block: releases connection to the connection pool
 
 
 ### slide:: p
-# most DBAPIs support autocommit now, which is why SQLAlchemy no longer
-# does.  To use driver level autocommit, use execution options:
+# autocommit can be achieved using the AUTOCOMMIT isolation level:
 
 with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
     connection.execute(
-        text("insert into employee(emp_name) values (:name)"),
-        {"name": "plankton"},
+        insert_stmt,
+        {"name": "squidward", "fullname": "Squidward Q. Tentacles"}
     )
 
-### slide:: pi
-# the data was autocommitted
-with engine.connect() as connection:
-    planktons_id = connection.execute(
-        text("select emp_id from employee where emp_name=:name"),
-        {"name": "plankton"}
-    ).scalar()
-    print(planktons_id)
 
 ### slide::
 ### title:: Questions?
