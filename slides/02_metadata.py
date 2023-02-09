@@ -5,11 +5,9 @@
 # applications, table metadata is **declared** using ORM models,
 # which are Python classes with attributes that represent columns
 
-from typing import List
 from typing import Optional
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import relationship
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import MappedAsDataclass
 from datetime import datetime
@@ -94,8 +92,12 @@ class Address(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     email_address: Mapped[str]
-    user_id = mapped_column(ForeignKey("user_account.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("user_account.id"))
 
+
+### slide:: p
+# We can see the DDL here creates a table that includes a FOREIGN KEY
+# constraint back to the other table
 
 with engine.begin() as conn:
     Base.metadata.create_all(conn)

@@ -42,7 +42,7 @@ with e.begin() as conn:
 
 from sqlalchemy import create_engine
 
-engine = create_engine("sqlite:///some.db")
+engine = create_engine("sqlite:///some.db", echo=True)
 
 
 ### slide::
@@ -57,7 +57,7 @@ connection
 # The Connection is a so-called **proxy** for a DBAPI connection.  We can
 # see it by peeking at the .connection attribute, then .connection again
 
-connection.connection.connection
+connection.connection.driver_connection
 
 ### slide:: p
 
@@ -66,8 +66,8 @@ connection.connection.connection
 
 from sqlalchemy import text
 
-stmt = text("select emp_id, emp_name from employee where emp_id=:emp_id")
-result = connection.execute(stmt, {"emp_id": 2})
+stmt = text("select 'hello world' as greeting")
+result = connection.execute(stmt)
 
 ### slide::
 # the result object we get back is similar to a cursor, with more methods,
@@ -78,24 +78,30 @@ row = result.first()
 # the row looks and acts mostly like a named tuple
 row
 row[1]
-row.emp_name
+row.greeting
 
 ### slide::
 # it also has a dictionary interface, which is available via an accessor
 # called ._mapping
-row._mapping["emp_name"]
+row._mapping["greeting"]
+
+
+stmt = text("select id, greeting from (values (1, 'hello'), (2, 'hola'), (3, 'bonjour'))")
+result = connection.execute(stmt)
+
+
 
 ### slide:: p
 # common idiomatic Python patterns including iteration and tuple
 # assignment are available (and likely the most common usage)
-result = connection.execute(text("select * from employee"))
-for emp_id, emp_name in result:
-    print(f"employee id: {emp_id}   employee name: {emp_name}")
+result = connection.execute(text("select * from (values (1, 'hello'), (2, 'hola'), (3, 'bonjour'))"))
+for id_, greeting in result:
+    print(f"id: {id_}   greeting: {greeting}")
 
 ### slide:: pi
 # there's also other methods like all().   More methods will be discussed
 # later.
-result = connection.execute(text("select * from employee"))
+result = connection.execute(text("select * from (values (1, 'hello'), (2, 'hola'), (3, 'bonjour'))"))
 result.all()
 
 ### slide::
@@ -110,7 +116,7 @@ connection.close()
 # using context managers.
 
 with engine.connect() as connection:
-    rows = connection.execute(text("select * from employee")).all()
+    rows = connection.execute(text("select 'hello' as greeting")).all()
 
 ### slide:: p
 ### title:: transactions, committing
@@ -119,6 +125,7 @@ with engine.connect() as connection:
 # of "library level" autocommit; which means, if the DBAPI driver is in
 # a transaction, SQLAlchemy will never commit it automatically.   The usual
 # way to commit is called "commit as you go"
+
 
 with engine.connect() as connection:
     connection.execute(

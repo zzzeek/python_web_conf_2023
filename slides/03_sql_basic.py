@@ -23,7 +23,7 @@ with engine.begin() as conn:
 
 ### slide::
 # as we saw earlier, Table has a collection of Column objects,
-# which we can access via table.c.<columnname>
+# which we can access via table.    c.<columnname>
 
 user_table.c.username
 
