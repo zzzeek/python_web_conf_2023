@@ -2,6 +2,12 @@
 import os
 from sqlalchemy import create_engine
 from sqlalchemy import text
+import sys
+
+import termcolor
+_print = print
+def print(text):
+    _print(termcolor.colored(text, attrs=["bold"]))
 
 
 ### slide::
@@ -11,7 +17,7 @@ from sqlalchemy import text
 
 from sqlalchemy import create_engine
 
-engine = create_engine("sqlite://", echo=True)
+engine = create_engine("sqlite://")
 
 
 ### slide::

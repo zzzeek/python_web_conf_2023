@@ -1,3 +1,10 @@
+### slide:: s
+
+import termcolor
+_print = print
+def print(text):
+    _print(termcolor.colored(text, attrs=["bold"]))
+
 ### slide::
 ### title:: ORM Centric Schema and MetaData
 # SQLAlchemy represents the structure of a relational schema
@@ -73,7 +80,7 @@ User.__table__.primary_key
 
 from sqlalchemy import create_engine
 
-engine = create_engine("sqlite://", echo=True)
+engine = create_engine("sqlite://")
 
 with engine.begin() as conn:
     Base.metadata.create_all(conn)

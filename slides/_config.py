@@ -4,7 +4,6 @@ import sys
 
 from sliderepl import Deck
 
-
 class SADeck(Deck):
     expose = Deck.expose + ("echo",)
 
