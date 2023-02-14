@@ -71,12 +71,26 @@ for id_, greeting in result:
     print(f"id: {id_}   greeting: {greeting}")
 
 ### slide:: p
-# there's also other methods like all().   More methods will be discussed
-# later.
+# for the very common case of getting an iterator of single values,
+# the .scalars() method is recommended
+for greeting in connection.scalars(
+    text("select * from (values ('hello'), ('hola'), ('bonjour'))")
+):
+    print(f"greeting: {greeting}")
+
+### slide:: p
+# there's also other methods like all().
 result = connection.execute(
     text("select * from (values (1, 'hello'), (2, 'hola'), (3, 'bonjour'))")
 )
 result.all()
+
+### slide:: p
+# all() and other result methods work with scalars() too
+scalar_result = connection.scalars(
+    text("select * from (values ('hello'), ('hola'), ('bonjour'))")
+)
+scalar_result.all()
 
 ### slide::
 # Connection has a .close() method.  This **releases** the

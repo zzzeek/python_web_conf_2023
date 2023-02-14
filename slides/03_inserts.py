@@ -6,14 +6,14 @@ def print(text):
     _print(termcolor.colored(text, attrs=["bold"]))
 
 ### slide::
-### title:: Setup
+### title:: Inserts
 
-# similar tables as before.  One change is how we are doing the
+# Start with similar tables as before.  One change is how we are doing the
 # default datetime for created_at, adding a SQL-time insert default.
 
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import ForeignKey, func
+from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase, MappedAsDataclass
 
 class Base(MappedAsDataclass, DeclarativeBase):
