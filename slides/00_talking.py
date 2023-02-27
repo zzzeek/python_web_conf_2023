@@ -16,7 +16,7 @@
 
 
 ### slide:: b
-### title:: SQLAlchemy 2.0 - Brief
+### title:: SQLAlchemy 2.0 - Brief History
 ### * First concepts worked out in August-November 2018
 ### * Top level goals:
 ###      * Unify Query with select()
@@ -26,17 +26,18 @@
 
 
 ### slide:: b
-### title:: SQLAlchemy 2.0 - Brief
+### title:: SQLAlchemy 2.0 - Brief History
 ### * Early Emergent goals:
 ###      * These goals became apparent as we began SQLAlchemy 1.4
 ###      * Integrate "baked" (SQL cached) queries within all statements across Core / ORM
 ###      * Implement pep-484 typing, first as stubs
 ###      * asyncio support using "stackless" technique
 ###      * all "early" goals were released in SQLAlchemy 1.4
+###      * 1.4.0 was November, 2020 (at 1.4.46 or so now)
 
 
 ### slide:: b
-### title:: SQLAlchemy 2.0 - Brief
+### title:: SQLAlchemy 2.0 - Brief History
 ### * Later Emergent goals:
 ###      * These goals became apparent as we started 2.0, after 1.4 was released
 ###      * Implement pep-484 typing inline
@@ -70,8 +71,9 @@
 ###     * Other things: schema reflection architecture, Cython
 
 
-### slide::
-### title:: A slide
+### slide:: b
+### title:: Onto the Tutorial!
+### * any Q ?
 
 
 ### slide::
