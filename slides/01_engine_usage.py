@@ -10,109 +10,126 @@ def print(text):
     _print(termcolor.colored(text, attrs=["bold"]))
 
 
-### slide::
-### title:: Engine Basics
-# create_engine() builds a *factory* for database connections.
-# Below we create an engine that will connect to a SQLite database.
+### slide:: b
+### title:: Engine Basics - An Engine is a Factory
+### * create_engine() builds a *factory* for database connections.
+### * In the following example, we create an engine that will connect to a SQLite database.
 
 from sqlalchemy import create_engine
 
 engine = create_engine("sqlite://")
 
 
-### slide::
-# The Engine doesn't actually connect until we tell it to for the first
-# time.  When using it directly, we get a connection using the .connect()
-# method.
+### slide:: b
+### title:: Engine Basics - Our First Connection
+### * The Engine doesn't actually connect until we tell it to for the first time.
+### * When using Engine directly, we get a connection using the .connect() method.
 
 connection = engine.connect()
 connection
 
-### slide::
-# The Connection is a so-called **proxy** for a DBAPI connection.  We can
-# see it by peeking at the .connection.driver_connection attribute
+### slide:: b
+### title:: Engine Basics - Our First Connection
+### * The Connection is a so-called **proxy** for a DBAPI connection.
+### * In this case, the DBAPI is Python's sqlite3 module
+### * We can see it by peeking at the .connection.driver_connection attribute:
 
 connection.connection.driver_connection
 
-### slide:: p
-
-# The Connection then features an .execute() method that will run queries.
-# To invoke a textual query we use the text() construct
+### slide:: bp
+### title:: Engine Basics - Execute a SQL String
+### * The SQLAlchemy Connection then features an .execute() method that will run queries, using the underlying DBAPI connection and cursor behind the scenes.
+### * To invoke a textual query, use the text() construct, passed to .execute():
 
 from sqlalchemy import text
 
 stmt = text("select 'hello world' as greeting")
 result = connection.execute(stmt)
 
-### slide::
-# the result object we get back is similar to a cursor, with more methods,
-# such as first() which will return the first row and close the result set
-row = result.first()
+### slide:: b
+### title:: Engine Basics - Getting Results
+### * The Connection.execute() method **always** returns a Result object.
+### * In this specific case it's called CursorResult, which means it's a direct proxy for a DBAPI cursor
 
-### slide:: i
-# the row looks and acts mostly like a named tuple
+result
+
+### slide:: b
+### title:: Engine Basics - Getting Results
+### * The Result is similar to a DBAPI cursor, but has more methods, transformations, and automation.
+### * One method is first(), which will return the first row and close the result set:
+row = result.first()
+row
+
+### slide:: b
+### title:: Engine Basics - Getting Results
+### * the row looks and acts mostly like a named tuple:
 row
 row[0]
 row.greeting
 
-### slide::
-# it also has a dictionary interface, which is available via an accessor
-# called ._mapping
+### slide:: bi
+### * it also has a dictionary interface, which is available via an accessor called ._mapping
 row._mapping["greeting"]
 
 
-### slide:: p
-# common idiomatic Python patterns including iteration and tuple
-# assignment are available (and likely the most common usage)
+### slide:: pb
+### title:: Engine Basics - Getting Results
+### * common idiomatic Python patterns including iteration and tuple assignment are common
 result = connection.execute(
     text("select * from (values (1, 'hello'), (2, 'hola'), (3, 'bonjour'))")
 )
 for id_, greeting in result:
     print(f"id: {id_}   greeting: {greeting}")
 
-### slide:: p
-# for the very common case of getting an iterator of single values,
-# the .scalars() method is recommended
+### slide:: pb
+### title:: Engine Basics - Getting Results
+### * for the very common case of getting an iterator of single values, the Connection.scalars() or Result.scalars() methods are recommended
 for greeting in connection.scalars(
     text("select * from (values ('hello'), ('hola'), ('bonjour'))")
 ):
     print(f"greeting: {greeting}")
 
-### slide:: p
-# there's also other methods like all().
+### slide:: pb
+### title:: Engine Basics - Getting Results
+### * there's also other methods like all().
 result = connection.execute(
     text("select * from (values (1, 'hello'), (2, 'hola'), (3, 'bonjour'))")
 )
 result.all()
 
-### slide:: p
-# all() and other result methods work with scalars() too
+### slide:: pb
+### title:: Engine Basics - Getting Results
+### * all() and other result methods work with scalars() too
 scalar_result = connection.scalars(
     text("select * from (values ('hello'), ('hola'), ('bonjour'))")
 )
 scalar_result.all()
 
-### slide::
-# Connection has a .close() method.  This **releases** the
-# DBAPI connection back to the connection pool.  This typically
-# does not actually close the DBAPI connection unless the pool is
-# in overflow mode.
+### slide:: b
+### title:: Engine Basics - Closing Connections
+### * Connection has a .close() method.
+### * .close() **releases** the DBAPI connection back to the connection pool.
+### *  "releases" means the pool may hold onto the connection, or close it if it's part of overflow
 connection.close()
 
-### slide:: p
-# Usually, modern Python code should manage the connect/release process
-# using context managers.
+### slide:: bp
+### title:: Engine Basics - Closing Connections
+### * Modern use should favor context managers to manage the connect/release process
 
 with engine.connect() as connection:
     print(connection.execute(text("select 'hello' as greeting")).all())
 
-### slide:: p
-### title:: transactions, committing
+### slide:: b
+### title:: Engine Basics - Transactions, Committing
+### * SQLAlchemy 2.0 always assumes an explicit or implicit "begin" of a "transaction", at the start of some SQL operations
+### * and it then expects an explicit "commit" or "rollback" at the end of those operations
+### * There's no "library level" "autocommit"; SQLAlchemy 2.0 **never** emits COMMIT implicitly
+### * however, true "autocommit" at the driver level is supported, where no explicit COMMIT is needed
 
-# Unlike previous SQLAlchemy versions, SQLAlchemy 2.0 has no concept
-# of "library level" autocommit; which means, if the DBAPI driver is in
-# a transaction, SQLAlchemy will never commit it automatically.   The usual
-# way to commit is called "commit as you go"
+### slide:: bp
+### title:: Engine Basics - Transactions, Committing
+### * The Connection has two variations in how this "transaction" starts.
+### * One is called "commit as you go" - as SQL is run, a transaction starts, which can be committed using Connection.commit()
 
 with engine.connect() as connection:
     connection.execute(
@@ -128,9 +145,9 @@ with engine.connect() as connection:
     connection.commit()
 
 
-### slide:: p
-# the other way is called "begin once", when you just have a single transaction
-# to commit
+### slide:: bp
+### title:: Engine Basics - Transactions, Committing
+### * The other variation is called "begin once" - the transaction starts as an explicit block that commits when complete
 
 with engine.begin() as connection:
     connection.execute(
@@ -142,9 +159,9 @@ with engine.begin() as connection:
  # connection pool. rolls back if there is an exception before re-throwing
 
 
-### slide:: p
-# You can also use begin() blocks local to the connection
-#
+### slide:: bp
+### title:: Engine Basics - Transactions, Committing
+### * engine.connect() can also be used with connection.begin()
 with engine.connect() as connection:
     with connection.begin():
         connection.execute(
@@ -155,8 +172,12 @@ with engine.connect() as connection:
  # end of outer block: releases connection to the connection pool
 
 
-### slide:: p
-# autocommit can be achieved using the AUTOCOMMIT isolation level:
+### slide:: bp
+### title:: Engine Basics - Transactions, Committing
+### * To use autocommit, this is enabled as an **execution option** on the Connection or Engine
+### * The programming patterns and code structure **do not change** at all
+### * There is still a client-side notion of a "transaction".
+### * The DBAPI driver COMMITs all statements implicitly
 
 with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
     connection.execute(

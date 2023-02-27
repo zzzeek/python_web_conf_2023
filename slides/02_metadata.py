@@ -5,12 +5,13 @@ _print = print
 def print(text):
     _print(termcolor.colored(text, attrs=["bold"]))
 
+### slide:: b
+### title:: ORM Centric Schema and MetaData
+### * SQLAlchemy represents the structure of a relational schema using the concept of **table metadata**.
+### * Commonly, table metadata is **declared** using ORM-enabled Python classes
+
 ### slide::
 ### title:: ORM Centric Schema and MetaData
-# SQLAlchemy represents the structure of a relational schema
-# using the concept of **table metadata**.   In most SQLAlchemy
-# applications, table metadata is **declared** using ORM models,
-# which are Python classes with attributes that represent columns
 
 from typing import Optional
 from sqlalchemy.orm import Mapped
@@ -32,10 +33,10 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(default_factory=datetime.utcnow)
 
 
-### slide::
-# The User class is called a **Declarative Mapped Class**.   We've used
-# MappedAsDataclass mixin, so this class is a standard Python dataclass,
-# which we can construct using normal dataclass semantics:
+### slide:: b
+### title:: ORM Centric Schema and MetaData
+### * The User class is called a **Declarative Mapped Class**.
+### * Using the MappedAsDataclass mixin, the class is also a standard Python dataclass.
 
 User("spongebob", "Spongebob Squarepants")
 
