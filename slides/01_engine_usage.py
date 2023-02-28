@@ -12,34 +12,42 @@ def print(text):
 
 ### slide:: b
 ### title:: Engine Basics - An Engine is a Factory
-### * create_engine() builds a *factory* for database connections.
-### * In the following example, we create an engine that will connect to a SQLite database.
+### * Before we build lots of things, let's just connect to a database.
+### * The innermost "connect to the database" structure is called the ``Engine``.
+### * To get an ``Engine``, we use the ``sqlalchemy.create_engine()`` function:
 
 from sqlalchemy import create_engine
 
 engine = create_engine("sqlite://")
 
+### slide:: bi
+### * In the above example, we made an ``Engine`` that will connect to a SQLite memory database.
+### * We didn't actually connect yet; the ``Engine`` is instead a **factory** that makes new connections when used
+
 
 ### slide:: b
 ### title:: Engine Basics - Our First Connection
-### * The Engine doesn't actually connect until we tell it to for the first time.
-### * When using Engine directly, we get a connection using the .connect() method.
+### * The ``Engine`` doesn't actually connect until we tell it to for the first time.
+### * When using ``Engine`` directly, we get a connection using the ``.connect()`` method.
 
 connection = engine.connect()
+
+### slide:: bi
+### * The returned object is an instance of ``sqlalchemy.engine.Connection``:
 connection
 
 ### slide:: b
 ### title:: Engine Basics - Our First Connection
-### * The Connection is a so-called **proxy** for a DBAPI connection.
+### * The ``sqlalchemy.engine.Connection`` is a so-called **proxy** for a DBAPI connection.
 ### * In this case, the DBAPI is Python's sqlite3 module
-### * We can see it by peeking at the .connection.driver_connection attribute:
+### * We can see it by peeking at the ``.connection.driver_connection`` attribute:
 
 connection.connection.driver_connection
 
 ### slide:: bp
 ### title:: Engine Basics - Execute a SQL String
-### * The SQLAlchemy Connection then features an .execute() method that will run queries, using the underlying DBAPI connection and cursor behind the scenes.
-### * To invoke a textual query, use the text() construct, passed to .execute():
+### * The SQLAlchemy ``Connection`` then features an ``.execute()`` method that will run queries, using the underlying DBAPI connection and cursor behind the scenes.
+### * To invoke a textual query, use the ``sqlalchemy.text()`` construct, passed to ``.execute()``:
 
 from sqlalchemy import text
 
@@ -48,27 +56,30 @@ result = connection.execute(stmt)
 
 ### slide:: b
 ### title:: Engine Basics - Getting Results
-### * The Connection.execute() method **always** returns a Result object.
-### * In this specific case it's called CursorResult, which means it's a direct proxy for a DBAPI cursor
+### * The ``Connection.execute()`` method **always** returns a ``sqlalchemy.engine.Result`` object.
+### * In this specific case it's called ``CursorResult``, which means it's a direct proxy for a DBAPI cursor
 
 result
 
 ### slide:: b
 ### title:: Engine Basics - Getting Results
-### * The Result is similar to a DBAPI cursor, but has more methods, transformations, and automation.
-### * One method is first(), which will return the first row and close the result set:
+### * The ``Result`` is similar to a DBAPI cursor, but has more methods, transformations, and automation.
+### * One method is ``.first()``, which will return the first row (or None if no row) and close the result set:
 row = result.first()
-row
 
 ### slide:: b
 ### title:: Engine Basics - Getting Results
-### * the row looks and acts mostly like a named tuple:
+### * The row is a ``sqlalchemy.engine.Row`` object
+type(row)
+
+### slide:: bi
+### * the ``Row`` object looks and acts mostly like a named tuple:
 row
 row[0]
 row.greeting
 
 ### slide:: bi
-### * it also has a dictionary interface, which is available via an accessor called ._mapping
+### * it also has a dictionary interface, which is available via an accessor called ``._mapping``
 row._mapping["greeting"]
 
 
@@ -83,7 +94,7 @@ for id_, greeting in result:
 
 ### slide:: pb
 ### title:: Engine Basics - Getting Results
-### * for the very common case of getting an iterator of single values, the Connection.scalars() or Result.scalars() methods are recommended
+### * for the very common case of getting an iterator of single values, the ``Connection.scalars()`` or ``Result.scalars()`` methods are recommended
 for greeting in connection.scalars(
     text("select * from (values ('hello'), ('hola'), ('bonjour'))")
 ):
@@ -91,7 +102,7 @@ for greeting in connection.scalars(
 
 ### slide:: pb
 ### title:: Engine Basics - Getting Results
-### * there's also other methods like all().
+### * there's also other methods like ``.all()``.
 result = connection.execute(
     text("select * from (values (1, 'hello'), (2, 'hola'), (3, 'bonjour'))")
 )
@@ -99,7 +110,7 @@ result.all()
 
 ### slide:: pb
 ### title:: Engine Basics - Getting Results
-### * all() and other result methods work with scalars() too
+### * ``.all()`` and other result methods work with ``.scalars()`` too
 scalar_result = connection.scalars(
     text("select * from (values ('hello'), ('hola'), ('bonjour'))")
 )
@@ -107,8 +118,8 @@ scalar_result.all()
 
 ### slide:: b
 ### title:: Engine Basics - Closing Connections
-### * Connection has a .close() method.
-### * .close() **releases** the DBAPI connection back to the connection pool.
+### * ``Connection`` has a ``.close()`` method.
+### * ``.close()`` **releases** the DBAPI connection back to the connection pool.
 ### *  "releases" means the pool may hold onto the connection, or close it if it's part of overflow
 connection.close()
 
@@ -129,7 +140,7 @@ with engine.connect() as connection:
 ### slide:: bp
 ### title:: Engine Basics - Transactions, Committing
 ### * The Connection has two variations in how this "transaction" starts.
-### * One is called "commit as you go" - as SQL is run, a transaction starts, which can be committed using Connection.commit()
+### * One is called "commit as you go" - as SQL is run, a transaction starts, which can be committed using ``Connection.commit()``
 
 with engine.connect() as connection:
     connection.execute(
@@ -161,7 +172,7 @@ with engine.begin() as connection:
 
 ### slide:: bp
 ### title:: Engine Basics - Transactions, Committing
-### * engine.connect() can also be used with connection.begin()
+### * ``engine.connect()`` can also be used with ``connection.begin()``
 with engine.connect() as connection:
     with connection.begin():
         connection.execute(
@@ -174,7 +185,7 @@ with engine.connect() as connection:
 
 ### slide:: bp
 ### title:: Engine Basics - Transactions, Committing
-### * To use autocommit, this is enabled as an **execution option** on the Connection or Engine
+### * To use autocommit, this is enabled as an **execution option** on the ``Connection`` or ``Engine``
 ### * The programming patterns and code structure **do not change** at all
 ### * There is still a client-side notion of a "transaction".
 ### * The DBAPI driver COMMITs all statements implicitly

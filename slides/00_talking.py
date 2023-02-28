@@ -19,7 +19,7 @@
 ### title:: SQLAlchemy 2.0 - Brief History
 ### * First concepts worked out in August-November 2018
 ### * Top level goals:
-###      * Unify Query with select()
+###      * Unify ``sqlalchemy.orm.Query`` with ``sqlalchemy.select()``
 ###      * Go all in on Python 3
 ###      * Get rid of "many ways to execute a statement", "guessing" version of autocommit
 ###      * All "top level" features / architectures would be in SQLAlchemy 1.4, except py3 only
@@ -53,7 +53,7 @@
 ### title:: SQLAlchemy 2.0 - The Migration
 ### * SQLAlchemy 1.4
 ###     * Implemented all the "top level" and "early emergent" goals
-###     * Core / ORM execution model *completely* rewritten for select() unification, caching
+###     * Core / ORM execution model *completely* rewritten for ``select()`` unification, caching
 ###     * No seriously, this was incredibly difficult.  months and months of staring into the void...
 ###     * New 2.0 APIs presented in a fully "opt-in" way
 ###     * SQLALCHEMY_WARN_20=1 mode, inspired by 2to3
