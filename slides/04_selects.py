@@ -198,20 +198,67 @@ with engine.connect() as conn:
         print(f"{name} {fullname}")
 
 
+### slide:: b
+### title:: FROM clauses, JOINs
+### * The FROM clause of a SELECT derives from the columns / tables we select
+
+print(select(User.name, Address.email_address))
+
+
+### slide:: bp
+### title:: FROM clauses, JOINs
+### * FROM clause in less common cases can be set manually if needed using ``.select_from()``
+
+stmt = select(func.count('*')).select_from(User)
+
+with engine.connect() as conn:
+    print(conn.scalar(stmt))
+
+
+### slide:: bp
+### title:: FROM clauses, JOINs
+### * the ``.join_from()`` method produces a basic JOIN between two tables.
+### * ON criteria for simple joins along foreign keys is usually automatic
+
+stmt = select(User.name, Address.email_address).join_from(User, Address)
+
+with engine.connect() as conn:
+    for username, email in conn.execute(stmt):
+        print(f"{username} {email}")
+
+### slide:: bi
+### * JOIN is more feature filled when working with ORM relationships, illustrated later
 
 ### slide:: b
 ### title:: UPDATE and DELETE, in brief
-### * as a brief preview, UPDATE and DELETE statements have WHERE criteria like a SELECT..
+### * as a brief preview, UPDATE and DELETE statements have a target table like an INSERT...
 
 from sqlalchemy import delete
-delete_stmt = delete(User).where(User.name == "krabs")
+from sqlalchemy import update
+
+delete_stmt = delete(User)
+update_stmt = update(User)
+
+### slide:: bi
+### * both have WHERE clauses like SELECT...
+
+delete_stmt = delete_stmt.where(User.name == "krabs")
+update_stmt = update_stmt.where(User.name == "patrick")
+
 
 ### slide:: bi
 ### * UPDATE additionally has "values" like INSERT, which is how we do the SET clause
 
-from sqlalchemy import update
-update_stmt = update(User).where(User.name == "patrick").values(fullname="Patrick Star")
+update_stmt = update_stmt.values(fullname="Patrick Star")
 
+
+### slide:: bp
+### title:: UPDATE and DELETE, in brief
+### * UPDATE and DELETE, like INSERT, need a ``.begin()`` block or ``.commit()`` to take effect
+
+with engine.begin() as conn:
+    conn.execute(delete_stmt)
+    conn.execute(update_stmt)
 
 
 ### slide::
