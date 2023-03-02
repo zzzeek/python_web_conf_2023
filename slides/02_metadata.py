@@ -6,23 +6,33 @@ def print(text):
     _print(termcolor.colored(text, attrs=["bold"]))
 
 ### slide:: b
-### title:: ORM Centric Schema and MetaData
+### title:: ORM Centric Table Metadata
 ### * SQLAlchemy represents the structure of a relational schema using the concept of **table metadata**.
 ### * Commonly, table metadata is **declared** using ORM-enabled Python classes
+### * SQLAlchemy 2.0's **Declarative** style has much resemblance to Python dataclass syntax
+### * SQLAlchemy classes also integrate with dataclasses, which is optional (but so far seems very popular)
 
-### slide::
-### title:: ORM Centric Schema and MetaData
+### slide:: b
+### title:: ORM Centric Table Metadata - Declaration
+### * The ORM mapping starts out with a base class called the **Declarative Base**
 
-from typing import Optional
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import MappedAsDataclass
-from datetime import datetime
 
 class Base(MappedAsDataclass, DeclarativeBase):
     pass
 
+### slide:: bi
+### * When we make subclasses of Base, it generates an ORM mapped class that will refer to a database table
+### * The ``MappedAsDataclass`` mixin is optional and indicates that the classes should also be Python dataclasses
+
+### slide:: b
+### title:: ORM Centric Table Metadata - Declaration
+
+from datetime import datetime
+from typing import Optional
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
 
 class User(Base):
     __tablename__ = "user_account"
@@ -33,51 +43,42 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(default_factory=datetime.utcnow)
 
 
+### slide:: bi
+### * Like dataclasses, typing information is derived at runtime from annotations
+### * The ``Mapped[]`` type indicates to SQLAlchemy that an attribute is mapped to a database column
+### * The ``mapped_column()`` construct is optional and allows additional details about the database column to be indicated
+### * ``mapped_column()`` also receives the same arguments as ``dataclasses.field()``, like default, init, etc.
+
 ### slide:: b
-### title:: ORM Centric Schema and MetaData
+### title:: ORM Centric Table Metadata - the Mapped Class
 ### * The User class is called a **Declarative Mapped Class**.
-### * Using the MappedAsDataclass mixin, the class is also a standard Python dataclass.
+### * Since it's also a dataclass, it has methods like default constructor and repr based on the field directives
 
 User("spongebob", "Spongebob Squarepants")
 
 
-### slide::
-# The Declarative Mapped Class also sets up an internal structure called
-# **table metadata**.  This consists of a type of object called
-# Table, and we see it on our mapped class by looking
-# at an attribute called __table__:
 
+### slide:: b
+### title:: ORM Centric Table Metadata - the Table
+### * The Declarative Mapped Class also sets up an internal structure called ``sqlalchemy.Table``
+### * This is an example of **table metadata** and represents the structure of a database table:
 
 User.__table__
 
 
-### slide::
-# Table is part of SQLAlchemy's public API, and we can make Table objects
-# directly.  However, using ORM Declarative models to declare
-# Table definitions has the advantage of integration with pep-484 typing,
-# both for declaration as well as providing type information for database
-# results, and it will also set us up to be ready for the ORM sections
-# later.
+### slide:: b
+### title:: ORM Centric Table Metadata - the Table
+### * ``Table`` is part of SQLAlchemy's public API
+### * Traditional Core-only SQLAlchemy use involves ``Table`` objects directly, without using ORM classes at all
+### * However, Core-only programs can use ORM Declarative models for table metadata now.
+### * This offers some advantages, even when not using the ORM:
+###      * integration with pep-484 typing, IDEs
+###      * type information for database result sets
+###      * statements are cross-compatible with Core / ORM
 
-
-### slide::
-# The Table knows all about what a real database table in the database
-# looks like.  It has a collection of "columns":
-
-list(User.__table__.c)
-
-### slide:: i
-# it also holds onto "constraints", the most basic of which is the primary
-# key constraint:
-
-User.__table__.primary_key
-
-
-
-### slide:: p
-# We can put together the Engine we did in the previous section with this
-# new table-defining DeclarativeMappedClass to emit CREATE TABLE
-# statements in a database:
+### slide:: bp
+### title:: ORM Centric Table Metadata - Emitting DDL
+### * Putting together the ``Table`` with an `Engine``, we can automate the production of CREATE TABLE statements
 
 from sqlalchemy import create_engine
 
@@ -87,9 +88,10 @@ with engine.begin() as conn:
     Base.metadata.create_all(conn)
 
 
-### slide::
-# If we want to have two tables related to each other, we use a
-# construct called ForeignKey
+### slide:: b
+### title:: ORM Centric Table Metadata - Foreign Keys
+### * We make a second ORM Declarative model (with its own ``Table``)
+### * we will associate it to the User model using ``ForeignKey``
 
 
 from sqlalchemy import ForeignKey
@@ -103,13 +105,20 @@ class Address(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("user_account.id"))
 
 
-### slide:: p
-# We can see the DDL here creates a table that includes a FOREIGN KEY
-# constraint back to the other table
+### slide:: bp
+### title:: ORM Centric Table Metadata - FOREIGN KEY
+### * Emitting more DDL we see the FOREIGN KEY directive
 
 with engine.begin() as conn:
     Base.metadata.create_all(conn)
 
+
+### slide:: b
+### title:: Core SQL (using ORM models)
+### * The next two sections will illustrate the use of these ORM Models to create SQL statements
+### * However, for SQLAlchemy veterans, note we are going to start with **Core only** use
+### * We'll run INSERT, SELECT, UPDATE, DELETE queries using ``Connection`` only, plain rows for results
+### * Later, we will pull in the ORM ``Session``
 
 
 

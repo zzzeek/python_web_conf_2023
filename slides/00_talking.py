@@ -17,7 +17,13 @@
 
 ### slide:: b
 ### title:: SQLAlchemy 2.0 - Brief History
-### * First concepts worked out in August-November 2018
+### * When SQLAlchemy 1.3 was out for awhile, things needed to change.
+### * First concepts for "something new" worked out in August-November 2018
+### * The next few slides will talk about big changes from the 1.x to 2.0 SQLAlchemy series
+### * novice users stand by....
+
+### slide:: b
+### title:: SQLAlchemy 2.0 - Brief History
 ### * Top level goals:
 ###      * Unify ``sqlalchemy.orm.Query`` with ``sqlalchemy.select()``
 ###      * Go all in on Python 3

@@ -5,6 +5,7 @@ _print = print
 def print(text):
     _print(termcolor.colored(text, attrs=["bold"]))
 
+
 ### slide::
 ### title:: Inserts
 
