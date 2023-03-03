@@ -6,11 +6,42 @@ def print(text):
     _print(termcolor.colored(text, attrs=["bold"]))
 
 ### slide:: b
-### title:: ORM Centric Table Metadata
+### title:: Table Metadata
 ### * SQLAlchemy represents the structure of a relational schema using the concept of **table metadata**.
-### * Commonly, table metadata is **declared** using ORM-enabled Python classes
-### * SQLAlchemy 2.0's **Declarative** style has much resemblance to Python dataclass syntax
-### * SQLAlchemy classes also integrate with dataclasses, which is optional (but so far seems very popular)
+### * SQLAlchemy Core provides this, using a well known object called ``Table`` (along with lots of supporting objects)
+### * The ``Table`` object can be constructed directly, and represents a table in a database.
+
+### slide:: b
+### title:: Table Metadata
+### * As an example, it looks like this:
+
+from sqlalchemy import Table, Column, MetaData
+from sqlalchemy import DateTime, Integer, String
+
+metadata = MetaData()
+
+user_account_table = Table(
+    "user_account",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("name", String, nullable=False),
+    Column("fullname", String),
+    Column("created_at", DateTime),
+)
+
+### slide:: bi
+### * Most official SQLAlchemy tutorials spend a lot of time on Table.
+### * However, we're going to duck out the side entrance and go elsewhere...
+
+### slide:: b
+### title:: ORM Centric Table Metadata
+### * In real world use, most applications are using the ORM to a greater or lesser degree
+### * In most ORM applications, ``Table`` is constructed **indirectly** using a style known as **Declarative ORM**
+### * Declarative ORM in SQLAlchemy 2.0 is super nice
+### * ORM-Centric table metadata integrates with IDE typing tools, mypy, etc.
+### * Creates typed SQL statements and result sets (!)
+### * Integrates with Python dataclasses too
+### * We can still do everything with Core as we did before
 
 ### slide:: b
 ### title:: ORM Centric Table Metadata - Declaration
@@ -60,25 +91,21 @@ User("spongebob", "Spongebob Squarepants")
 
 ### slide:: b
 ### title:: ORM Centric Table Metadata - the Table
-### * The Declarative Mapped Class also sets up an internal structure called ``sqlalchemy.Table``
-### * This is an example of **table metadata** and represents the structure of a database table:
+### * The Declarative Mapped Class sets the ``Table`` for us, as the class is created
+### * here it is
 
 User.__table__
 
 
-### slide:: b
-### title:: ORM Centric Table Metadata - the Table
-### * ``Table`` is part of SQLAlchemy's public API
-### * Traditional Core-only SQLAlchemy use involves ``Table`` objects directly, without using ORM classes at all
-### * However, Core-only programs can use ORM Declarative models for table metadata now.
-### * This offers some advantages, even when not using the ORM:
-###      * integration with pep-484 typing, IDEs
-###      * type information for database result sets
-###      * statements are cross-compatible with Core / ORM
+### slide:: bi
+### * looks just like the ``Table`` we constructed directly
+
+user_account_table
+
 
 ### slide:: bp
 ### title:: ORM Centric Table Metadata - Emitting DDL
-### * Putting together the ``Table`` with an `Engine``, we can automate the production of CREATE TABLE statements
+### * Whether we made our ``Table`` directly or by using ORM Declarative, we can run a CREATE TABLE statement using a method ``.create_all()``
 
 from sqlalchemy import create_engine
 

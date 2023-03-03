@@ -16,6 +16,25 @@
 
 
 ### slide:: b
+### title:: SQLAlchemy - What's in the Box
+### * SQLAlchemy has always referred to itself as a "database toolkit"
+### * The idea is, provide lots of tools.
+### * One of these tools is an ORM
+### * However there's also lots of other features that don't use the ORM
+
+### slide:: b
+### title:: SQLAlchemy - What's in the Box
+### * Features like:
+###     * A facade around the Python DBAPI that provides a much richer programming environment
+###     * Database schema management functions
+###     * a SQL query builder
+###     * Schema inspection utilities
+###     * sleepless devs (yes there are more of me now) answering questions 24/7
+### * All of the above features that aren't "ORM" are called **SQLAlchemy Core**
+### * The most curmudgeonly DBA should have no problem with all the things that are in Core
+### * but alas, they are curmudgeonly....
+
+### slide:: b
 ### title:: SQLAlchemy 2.0 - Brief History
 ### * When SQLAlchemy 1.3 was out for awhile, things needed to change.
 ### * First concepts for "something new" worked out in August-November 2018
@@ -27,7 +46,7 @@
 ### * Top level goals:
 ###      * Unify ``sqlalchemy.orm.Query`` with ``sqlalchemy.select()``
 ###      * Go all in on Python 3
-###      * Get rid of "many ways to execute a statement", "guessing" version of autocommit
+###      * Get rid of "many ways to execute a SQL statement", troublesome "autocommit" feature
 ###      * All "top level" features / architectures would be in SQLAlchemy 1.4, except py3 only
 
 

@@ -14,6 +14,7 @@ def print(text):
 ### title:: Engine Basics - An Engine is a Factory
 ### * Before we build lots of things, let's just connect to a database.
 ### * The innermost "connect to the database" structure is called the ``Engine``.
+### * This is the most foundational construct in SQLAlchemy Core.
 ### * To get an ``Engine``, we use the ``sqlalchemy.create_engine()`` function:
 
 from sqlalchemy import create_engine
