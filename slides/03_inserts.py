@@ -30,8 +30,7 @@ class User(Base):
     name: Mapped[str]
     fullname: Mapped[Optional[str]]
     created_at: Mapped[datetime] = mapped_column(
-        default_factory=datetime.utcnow,
-        server_default=func.now()
+        init=False, server_default=func.now()
     )
 
 ### slide:: bi

@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase, MappedAsDataclass
-from sqlalchemy import create_engine, insert
+from sqlalchemy import create_engine, insert, func
 from sqlalchemy import ForeignKey
 
 
@@ -28,7 +28,7 @@ class User(Base):
     name: Mapped[str]
     fullname: Mapped[Optional[str]]
     created_at: Mapped[datetime] = mapped_column(
-        default_factory=datetime.utcnow, server_default=func.now()
+        init=False, server_default=func.now()
     )
 
 class Address(Base):

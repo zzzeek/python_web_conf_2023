@@ -35,6 +35,7 @@ def print(text):
 
 from datetime import datetime
 from typing import Optional
+from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase, MappedAsDataclass
 
 class Base(MappedAsDataclass, DeclarativeBase):
@@ -47,7 +48,9 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True, init=False)
     name: Mapped[str]
     fullname: Mapped[Optional[str]]
-    created_at: Mapped[datetime] = mapped_column(default_factory=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(
+        init=False, server_default=func.now()
+    )
 
 ### slide:: p
 ### title:: create engine and generate the schema
@@ -110,22 +113,34 @@ session
 session.connection()
 
 
-### slide:: bip
+### slide:: bi
 ### * (The ``.connection()`` method is normally used in most real applications mmm ...hmmm... never.)
 
 ### slide:: bp
 ### title:: Session is connected, now what?
 ### * Once the ``Session`` has established a connection, it's considered to be **in a transaction**.
-### * This transaction stays until we call:  ``.commit()``, ``.rollback()``, or ``.close()``
+### * We can run any Core or ORM SQL statement using methods like ``.execute()`` method
+
+from sqlalchemy import text
+result = session.execute(text("select 'hello world'"))
+
+### slide:: bi
+### * The return value is a ``Result``, just like ``Connection.execute()``.
+
+print(result.scalars().one())
+
+### slide:: bp
+### title:: Session is connected, now what?
+### * To end the transaction and **release** the ``Connection``, call:  ``.commit()``, ``.rollback()``, or ``.close()``
 
 session.close()
 
 
-### slide:: b
+### slide:: bp
 ### title:: Properly managing Session scope
-### * Since ``Session`` has a connect/close cycle, we normally want to use Python context manager patterns
+### * Since ``Session`` has connect/close and begin/commit cycles, we normally want to use Python context manager patterns
 ### * ``sessionmaker()`` and ``Session`` integrate together to provide context manager support
-### * Below we open a ``Session``, run a statement in a block, then ``Session`` is closed
+### * Below, we open a ``Session``, run a statement in a block, then ``Session`` is closed
 
 from sqlalchemy import select
 
@@ -135,7 +150,7 @@ with session_factory() as sess:
 
 ### slide:: bp
 ### title:: Properly managing Session scope
-### * ``sessionmaker()`` supports the same transaction modes as the engine
+### * ``sessionmaker()`` / ``Session`` support the same transaction patterns as ``Engine`` / ``Connection``
 ### * "commit-as-you-go", where we call ``.commit()`` any number of times
 
 from sqlalchemy import insert
@@ -151,7 +166,8 @@ with session_factory() as sess:
 
     sess.commit()
 
-### slide:: bip
+### slide:: bp
+### title:: Properly managing Session scope
 ### * and "begin once", where we call ``.begin()`` that runs a transaction block
 
 from sqlalchemy import delete
@@ -163,8 +179,8 @@ with session_factory.begin() as sess:
 
 ### slide:: b
 ### title:: Unit of work patterns with the Session
-### * For most of these examples, we will make a single ``Session`` and leave it opened, so that interactions can be seen
 ### * Real world code should try to use context manager patterns to manage ``Session`` scope
+### * However, for the **purposes of example**, we will make a single ``Session`` and leave it opened, so that interactions can be seen
 
 session_that_we_will_keep_opened_only_for_the_purposes_of_example = session_factory()
 
