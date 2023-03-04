@@ -107,9 +107,9 @@ session
 
 ### slide:: bp
 ### title:: sessionmaker, Session, and where's the database connection?
-### * Why isn't it ``Session.connect()``?
+### * Why isn't it ``session_factory.connect()``?
 ### * Because we didn't actually connect to anything yet.  The ``Session`` connects to database engines **on demand**.
-### * as an example, we can make it connect right now by asking it for a database connection, using ``.connection()``
+### * as an example, we can make it connect right now by asking it for a database connection, using ``Session.connection()``
 session.connection()
 
 
@@ -119,19 +119,20 @@ session.connection()
 ### slide:: bp
 ### title:: Session is connected, now what?
 ### * Once the ``Session`` has established a connection, it's considered to be **in a transaction**.
-### * We can run any Core or ORM SQL statement using methods like ``.execute()`` method
+### * That same ``Connection`` object will continue to be used until the transaction ends
+### * We can run any Core or ORM SQL statement using methods like ``Session.execute()`` (and friends ``Session.scalars()``, ``Session.scalar()``)
 
 from sqlalchemy import text
 result = session.execute(text("select 'hello world'"))
 
 ### slide:: bi
-### * The return value is a ``Result``, just like ``Connection.execute()``.
+### * ``Session.execute()`` returns ``Result`` object, just like ``Connection.execute()``.
 
 print(result.scalars().one())
 
 ### slide:: bp
 ### title:: Session is connected, now what?
-### * To end the transaction and **release** the ``Connection``, call:  ``.commit()``, ``.rollback()``, or ``.close()``
+### * To end the transaction and **release** the ``Connection``, call:  ``Session.commit()``, ``Session.rollback()``, or ``Session.close()``
 
 session.close()
 
@@ -151,7 +152,7 @@ with session_factory() as sess:
 ### slide:: bp
 ### title:: Properly managing Session scope
 ### * ``sessionmaker()`` / ``Session`` support the same transaction patterns as ``Engine`` / ``Connection``
-### * "commit-as-you-go", where we call ``.commit()`` any number of times
+### * "commit-as-you-go", where we call ``Session.commit()`` any number of times
 
 from sqlalchemy import insert
 
@@ -168,7 +169,7 @@ with session_factory() as sess:
 
 ### slide:: bp
 ### title:: Properly managing Session scope
-### * and "begin once", where we call ``.begin()`` that runs a transaction block
+### * and "begin once", where we call ``Session.begin()`` that runs a transaction block
 
 from sqlalchemy import delete
 
@@ -192,48 +193,184 @@ session = session_that_we_will_keep_opened_only_for_the_purposes_of_example
 
 ### slide:: b
 ### title:: Unit of work patterns with the Session
-### title:: Make pending objects
+### * Recall the User object we already made:
+
+spongebob
+
+### slide:: bi
+### * We want to persist the data inside of "spongebob" into a new row in the "user_account" database table
+### * We tell the ``Session`` this is what we want to do using ``Session.add()``
+
+session.add(spongebob)
+
+### slide:: bi
+### title:: Unit of work patterns with the Session
+### * This did not yet modify the database, however the object is now known as **pending**.
+### * **pending** means, "Python object that will be used to populate an INSERT statement"
+### * We can see the "pending" objects by looking at the ``session.new`` attribute.
+
+session.new
+
+
+### slide:: b
+### title:: Unit of work patterns with the Session
+### * "pending" objects get persisted using INSERT statements:
+###     * The next time we run any SQL statement with ``Session.execute()`` or similar
+###     * When we call an explicit method ``Session.flush()``
+###     * When we commit the transaction with ``Session.commit()``
+### * The process by which the ``Session`` emits INSERT, UPDATE and DELETE statements to the database automatically is known as the **flush**
+
+### slide:: bp
+### title:: Unit of work patterns with the Session
+### * We will illustrate "persist when we run SQL" behavior
+### * As seen previously, to SELECT rows from the database, we use ``select()``
+### * Before the SELECT runs, we will see INSERT occur
+
+from sqlalchemy import select
+
+select_statement = select(User).where(User.name == "spongebob")
+result = session.scalars(select_statement)
+
+### slide:: b
+### title:: Unit of work patterns with the Session
+### * The ``Result`` we got from ``Session.scalars()`` is called ``ScalarResult``
+
+result
+
+### slide:: bi
+### * ``ScalarResult`` returns the first column of each row.
+### * In this case, the first column contains ``User`` entities, so we get a ``User`` back
+
+also_spongebob = result.one()
+
+
+### slide:: bi
+### * On this ``User`` object, we see that server generated attributes ".id", ".created_at" are populated
+
+also_spongebob
+
+
+### slide:: b
+### title:: Unit of work patterns with the Session
+### * The User object we got back is also the **same Python object** as the original one we used with ``Session.add()``
+
+spongebob is also_spongebob
+
+
+### slide:: bi
+### * The way that we got back the same object as the one we added is because the ``Session`` uses an ....?
+### * <waits for class>
+### * **Identity Map**
+
+
+### slide:: b
+### title:: The Identity Map
+### * The **Identity Map** is a **weak mapping** of objects keyed to their class/primary key identity
+
+dict(session.identity_map)
+
+
+### slide:: bi
+### * All objects that are persisted by the ``Session`` using "flush", as well as all objects that we load using ``Session.scalars()``, ``Session.execute()`` etc. are placed in the identity map
+### * An object that is present in the identity map is said to be in the **persistent** state
+### * **persistent** means, "there is a row in the current database transaction that matches this object's primary key identity"
+### * It's an important integration point with all the ways that objects can be created and loaded
+
+
+### slide:: b
+### title:: Unit of Work - Making Changes
+### * ``Session.add_all()`` lets us add more objects into the **pending** state...
+
+session.add_all(
+    [
+        User("patrick", "Patrick Star"),
+        User("sandy", "Sandy Cheeks"),
+    ]
+)
+
+### slide:: bi
+### * as before, we can see these pending objects in ``Session.new``:
+
+session.new
+
+### slide:: b
+### title:: Unit of Work - Making Changes
+### * For objects that are already **persistent**, we can modify their attributes
+
+spongebob.fullname = "Spongebob Jones"
+
+### slide:: bi
+### * Persistent objects that have Python-side changes on them are referred towards as **dirty**.
+### * **dirty** objects can be seen in ``Session.dirty``
+
+session.dirty
+
+### slide:: bi
+### * The **persistent, dirty** state for an object means "Python object with pending changes that will be used to populate an UPDATE statement"
+
+
+### slide:: bp
+### title:: Unit of Work - Committing changes
+### * With objects in both the **pending** and **persistent** states, running any SQL operation, as well as any ``Session.flush()`` or ``Session.commit()`` call will "flush" all those changes before proceeding.
+
+session.commit()
+
+### slide:: bp
+### title:: Unit of Work - Expire on commit, lazy loading, autobegin
+### * The ``Session`` defaults to a behavior called **expire on commit**
+### * It means that when the transaction is complete, all "data" is expired
+### * When data is "expired", accessing object attributes again defaults to a behavior called **lazy loading**, i.e. refresh from the database
+### * Refreshing from the database however needs a new transaction, so it calls upon a default behavior called **autobegin**
+### * This means touching ``spongebob.fullname`` will start a new tranasction and run a SELECT
+
+spongebob.fullname
+
+### slide:: b
+### title:: Unit of Work - Controversy!
+### * The expire-on-commit, lazy-loading, autobegin combination sums up most ORM controversy in a nutshell
+### * The fundamental element is that these patterns allow for database IO without actually saying "run some IO"
+### * Options exist to disable these features, e.g.:
+###    * Turn off expire-on-commit: ``session_factory = sessionmaker(engine, expire_on_commit=False)``
+###    * Turn off autobegin:  ``session_factory = sessionmaker(engine, autobegin=False)``
+###    * Turn off lazy-loading: Turn off expiration + autobegin, use **eager loading** patterns as well as **raiseload** patterns
+
+
+### slide:: b
+### title:: Unit of Work - Rolling back changes
+### * We illustrate another "dirty" and another "pending" change:
+
+spongebob.name = "Spongy"
+fake_user = User("fakeuser", "Invalid")
+session.add(fake_user)
+
+### slide:: bp
+### title:: Unit of Work - Rolling back changes
+### * These changes will be flushed when we run more SQL, or call ``Session.flush()``
+
+session.flush()
+
+### slide:: bp
+### title:: Unit of Work - Rolling back changes
+### * our changes are **flushed**, but they are not **committed**
+### * We can un-do both of those changes using ``Session.rollback()``
+
+session.rollback()
+
+### slide:: b
+### title:: Unit of Work - Rolling back changes
+### * In the ``Session.rollback()`` case, all data that changed is again expired
+
+### slide:: bi
+### * accessing data re-loads the old data
+spongebob.name
+
+### slide:: bi
+### * "pending" objects have been evicted from the session.
+fake_user in session
 
 
 ### slide::
-### title:: inspection
-
-### slide::
-### title:: add objects
-
-
-### slide::
-### title:: inspection again
-
-
-### slide::
-### title:: query for pending object, flush
-
-### slide::
-### title:: identity map
-
-### slide::
-### title:: modify object
-
-
-### slide::
-### title:: commit
-
-### slide::
-### title:: invalidate
-
-### slide::
-### title:: bad changes
-
-
-### slide::
-### title:: rollback
-
-
-
-
-
-
+### title:: Questions!
 
 
 
