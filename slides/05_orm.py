@@ -1,16 +1,3 @@
-### slide:: s
-
-import termcolor
-
-
-_print = print
-
-
-def print(text):
-    _print(termcolor.colored(text, attrs=["bold"]))
-
-
-
 ### slide:: b
 ### title:: It's time for...
 ### * We now cross into a new dimension of everything thus far
@@ -127,9 +114,9 @@ from sqlalchemy import text
 result = session.execute(text("select 'hello world'"))
 
 ### slide:: bi
-### * ``Session.execute()`` returns ``Result`` object, just like ``Connection.execute()``.
+### * ``Session.execute()`` returns a ``Result`` object, just like ``Connection.execute()`` does as well.
 
-print(result.scalars().one())
+print(result.one())
 
 ### slide:: bp
 ### title:: Session is connected, now what?

@@ -1,12 +1,5 @@
 # absolute minimum time 11:53
 
-### slide:: s
-
-import termcolor
-_print = print
-def print(text):
-    _print(termcolor.colored(text, attrs=["bold"]))
-
 
 ### slide:: b
 ### title:: Inserts

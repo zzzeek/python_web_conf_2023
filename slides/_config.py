@@ -41,6 +41,13 @@ class SADeck(Deck):
         self.start_with_echo = echo_on
         self.banner_top = self._color(banner_top, "plain")
 
+    def setup_environ(self, environ):
+        import termcolor
+
+        def _print(text):
+            print(termcolor.colored(text, attrs=["bold"]))
+        environ["print"] = _print
+
     def start(self):
         logging_config = {
             "format": "[SQL]: %(message)s",

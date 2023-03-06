@@ -1,15 +1,8 @@
 # absolute minimum time 18:30
 
 ### slide:: s
-import os
 from sqlalchemy import create_engine
 from sqlalchemy import text
-import sys
-
-import termcolor
-_print = print
-def print(text):
-    _print(termcolor.colored(text, attrs=["bold"]))
 
 
 ### slide:: b

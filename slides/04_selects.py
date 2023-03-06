@@ -1,20 +1,11 @@
 ### slide:: s
 
-import termcolor
 from datetime import datetime
 from typing import Optional
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase, MappedAsDataclass
 from sqlalchemy import create_engine, insert, func
 from sqlalchemy import ForeignKey
-
-
-_print = print
-
-
-def print(text):
-    _print(termcolor.colored(text, attrs=["bold"]))
-
 
 
 class Base(MappedAsDataclass, DeclarativeBase):
