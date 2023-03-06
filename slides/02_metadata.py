@@ -1,3 +1,5 @@
+# absolute minimum time 17:55
+
 ### slide:: s
 
 import termcolor
@@ -83,7 +85,7 @@ class User(Base):
 ### slide:: b
 ### title:: ORM Centric Table Metadata - the Mapped Class
 ### * The User class is called a **Declarative Mapped Class**.
-### * Since it's also a dataclass, it has methods like default constructor and repr based on the field directives
+### * Since it's also a dataclass, it has methods like default ``__init__()`` and ``__repr__()`` based on the directives passed to ``mapped_column()``
 
 User("spongebob", "Spongebob Squarepants")
 

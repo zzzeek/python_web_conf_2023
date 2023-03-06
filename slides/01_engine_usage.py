@@ -1,3 +1,5 @@
+# absolute minimum time 18:30
+
 ### slide:: s
 import os
 from sqlalchemy import create_engine

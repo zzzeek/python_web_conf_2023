@@ -77,7 +77,7 @@ spongebob = User("spongebob", "Spongebob Squarepants")
 spongebob
 
 ### slide:: bi
-### * Both are super important in the ORM - SQLAlchemy adds rich behaviors to both non-instantiated classes as well as instances
+### * Both are super important in the ORM - SQLAlchemy adds rich behaviors to both non-instantiated classes as well as instances of those classes
 
 
 ### slide:: b
@@ -85,14 +85,15 @@ spongebob
 ### * For instances of User, we want to **persist** and **load** them to and from a database
 ### * To achieve this, we use a new kind of tool that can **mediate** between instances, SQL DML statements, and SQL result rows
 ### * all while maintaining these operations in an ongoing database transaction
-### * This object is called **the Session**, or ``Session``.
-### * It's analogous to the ORM as the ``Connection`` object is analogous to Core.
+### * This object is called **the Session**.
+### * The ``Session`` is to the ORM what the ``Connection`` object is to Core - the "thing that interacts with the transaction"
 
 
 ### slide:: b
 ### title:: Crossing from Core to ORM - the Session
-### * In a similar way that ``Connection`` comes from a factory for connections known as ``Engine``, the ``Session`` comes from a factory called ``sessionmaker()``.
-### * ``sessionmaker()`` is given our ``Engine``, which it will use when it needs to get database connections
+### * In a similar way as ``Connection`` objects come from a factory called ``Engine``; the ``Session`` comes from a factory called ``sessionmaker()``.
+### * ``sessionmaker()`` is instantiated with an ``Engine``
+### * This ``Engine`` is passed along to ``Session`` objects, which then use it to get database connections behind the scenes.
 
 from sqlalchemy.orm import sessionmaker
 
@@ -107,8 +108,8 @@ session
 
 ### slide:: bp
 ### title:: sessionmaker, Session, and where's the database connection?
-### * Why isn't it ``session_factory.connect()``?
-### * Because we didn't actually connect to anything yet.  The ``Session`` connects to database engines **on demand**.
+### * If ``sessionmaker()`` is a factory for ``Session`` like an ``Engine`` is a factory for ``Connection``, why isn't the method called ``session_factory.connect()``?
+### * Because we didn't actually connect to anything yet.  The ``Session`` connects to database engines **on demand**, after it was instantiated.
 ### * as an example, we can make it connect right now by asking it for a database connection, using ``Session.connection()``
 session.connection()
 
@@ -169,7 +170,7 @@ with session_factory() as sess:
 
 ### slide:: bp
 ### title:: Properly managing Session scope
-### * and "begin once", where we call ``Session.begin()`` that runs a transaction block
+### * and "begin once", where we call ``sessionmaker.begin()``, which establishes a new ``Session`` and provides a transaction-committing block
 
 from sqlalchemy import delete
 
@@ -203,10 +204,10 @@ spongebob
 
 session.add(spongebob)
 
-### slide:: bi
+### slide:: b
 ### title:: Unit of work patterns with the Session
-### * This did not yet modify the database, however the object is now known as **pending**.
-### * **pending** means, "Python object that will be used to populate an INSERT statement"
+### * This did not yet modify the database, however the object is now referred towards as **pending**.
+### * **pending** means, "this is a Python object that will be used to populate an INSERT statement"
 ### * We can see the "pending" objects by looking at the ``session.new`` attribute.
 
 session.new
@@ -214,46 +215,47 @@ session.new
 
 ### slide:: b
 ### title:: Unit of work patterns with the Session
-### * "pending" objects get persisted using INSERT statements:
-###     * The next time we run any SQL statement with ``Session.execute()`` or similar
+### * We have a "pending" object that will be used to populate an INSERT statement
+### * The process by which the ``Session`` emits INSERT, UPDATE and DELETE statements for objects such as these is known as the **flush**
+### * The flush process occurs when:
+###     * We run any SQL statement with ``Session.execute()`` or similar, before that SQL statement is executed (known as **autoflush**)
+###     * When any ORM instance runs a process known as "lazy loading" (also part of autoflush; more on that later)
 ###     * When we call an explicit method ``Session.flush()``
-###     * When we commit the transaction with ``Session.commit()``
-### * The process by which the ``Session`` emits INSERT, UPDATE and DELETE statements to the database automatically is known as the **flush**
+###     * When we commit the transaction with ``Session.commit()``, before the actual COMMIT occurs
 
 ### slide:: bp
 ### title:: Unit of work patterns with the Session
-### * We will illustrate "persist when we run SQL" behavior
+### * We will illustrate the flush occurring using "autoflush" behavior, by also loading an object **from** the database at the same time
+### * This will persist the pending object we have and then load it right back in one step.
 ### * As seen previously, to SELECT rows from the database, we use ``select()``
-### * Before the SELECT runs, we will see INSERT occur
+### * The ``Session`` here has a new behavior we didn't see with ``Connection``; selecting a "User" will return **instances of User objects**, rather than individual columns
 
 from sqlalchemy import select
 
 select_statement = select(User).where(User.name == "spongebob")
-result = session.scalars(select_statement)
+result = session.execute(select_statement)
 
 ### slide:: b
 ### title:: Unit of work patterns with the Session
-### * The ``Result`` we got from ``Session.scalars()`` is called ``ScalarResult``
+### * The ``Result`` that we get back from ``Session.execute()`` has a single row
 
-result
+row = result.one()
 
 ### slide:: bi
-### * ``ScalarResult`` returns the first column of each row.
-### * In this case, the first column contains ``User`` entities, so we get a ``User`` back
-
-also_spongebob = result.one()
+### * within this row, the ``User`` we selected is a single column value
+also_spongebob = row[0]
 
 
 ### slide:: bi
 ### * On this ``User`` object, we see that server generated attributes ".id", ".created_at" are populated
-
 also_spongebob
-
 
 ### slide:: b
 ### title:: Unit of work patterns with the Session
 ### * The User object we got back is also the **same Python object** as the original one we used with ``Session.add()``
 
+spongebob
+also_spongebob
 spongebob is also_spongebob
 
 
@@ -275,6 +277,22 @@ dict(session.identity_map)
 ### * An object that is present in the identity map is said to be in the **persistent** state
 ### * **persistent** means, "there is a row in the current database transaction that matches this object's primary key identity"
 ### * It's an important integration point with all the ways that objects can be created and loaded
+
+
+### slide:: b
+### title:: Selecting objects with scalars
+### * Recall how we had to extract our User object from a row
+
+row[0]
+
+
+### slide:: bip
+### * We very frequently will want to load objects alone from our SELECT statements, not rows
+### * So for everyday ORM "load objects" use, we will use ``Session.scalars()`` more often than ``Session.execute()``
+### * We can run it here where we will still get the same "spongebob" object back
+
+this_too_is_spongebob = session.scalars(select(User).where(User.name == "spongebob")).first()
+print(this_too_is_spongebob)
 
 
 ### slide:: b

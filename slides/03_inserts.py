@@ -1,3 +1,5 @@
+# absolute minimum time 11:53
+
 ### slide:: s
 
 import termcolor
@@ -62,7 +64,8 @@ from sqlalchemy import insert
 insert_stmt = insert(User)
 
 ### slide:: bi
-### * Next, we further indicate a VALUES clause to be included in the INSERT statement, using the ``.values()`` method
+### * Next, we further indicate a VALUES clause to be included in the INSERT statement, using the ``insert.values()`` method
+### * ``insert.values()`` in this form accepts keys that match database column names
 
 insert_stmt = insert_stmt.values(name="spongebob", fullname="Spongebob Squarepants")
 
@@ -97,10 +100,10 @@ with engine.begin() as conn:
 ### * Then, we can pass a **dictionary** or **list of dictionaries** to the ``.execute()`` method to accompany the statement
 ### * SQLAlchemy will then INSERT lists of dictionaries in bulk
 
-### slide:: b
+### slide:: bp
 ### title:: INSERT using "executemany"
-### * The automatic generation of VALUES works by passing dictionaries with string keys that match the names of the columns (more specifically, the key under which the column is part of the ``Table`` or ORM mapped class)
-### * This is one of relatively few places in SQLAlchemy where an API relies upon a naming convention
+### * The automatic generation of VALUES works by inspecting the keys within the first dictionary given
+### * The convention of "keys match column names" is the same as that of the ``insert.values()`` method.
 
 with engine.begin() as conn:
     conn.execute(
