@@ -1,3 +1,5 @@
+# absolute minimum time 23:04
+
 ### slide:: s
 
 from datetime import datetime
@@ -57,24 +59,36 @@ with engine.begin() as conn:
 
 ### slide:: b
 ### title:: SELECT statements
-### * the basic unit to create a SELECT statement, if not using "text", is the ``sqlalchemy.select()`` function.
-### * below we use it with another function ``literal()`` to create a SELECT for a single literal value
+### * In the section on executing statements with an ``Engine``, we ran a ``text()`` construct that looked like this:
+
+from sqlalchemy import text
+stmt = text("select 'hello world' as greeting")
+
+### slide:: bi
+### * let's write that instead using SQLAlchemy's Core expression language, using a construct called ``select()``.
+### * In order to select a literal value like "hello world" we will also use a construct called ``literal()``.
 
 from sqlalchemy import select, literal
-stmt = select(literal("some data"))
+
+stmt = select(
+    literal("hello world").label("greeting")
+)
 
 ### slide:: bp
 ### title:: SELECT statements
-### * Like we did with ``sqlalchemy.text()`` earlier, the ``select()`` construct can be executed using ``connection.execute()``
+### * As we did previously with ``text()``, we can run this statement using ``Connection.execute()``
 
-with engine.connect() as conn:
-    print(conn.execute(stmt).scalars().one())
+with engine.connect() as connection:
+    result = connection.execute(stmt)
+    print(result.first())
 
+### slide:: bi
+### * note that ``literal()`` automatically made the use of a bound parameter for the string "hello world".  Most SQLAlchemy SQL constructs will automatically use bound values as much as possible.
 
 ### slide:: b
 ### title:: SELECT statements
-### * More interestingly, we can use our ORM models to create SELECTs against tables
-### * The Class-bound attributes on ORM models represent SQL Columns, such as ``User.name`` below
+### * While selecting a plain string seemed a bit cumbersome, usually we are using ``select()`` to SELECT from tables and columns
+### * As we are using ORM-Centric table metadata, the class-bound attributes on ORM models represent SQL Columns, such as ``User.name`` below, which we can SELECT from.
 
 stmt = select(User.name)
 
@@ -83,34 +97,82 @@ stmt = select(User.name)
 
 print(stmt)
 
+### slide:: b
+### title:: SELECT statements - what are we SELECTing?
+### * The arguments we send to ``select()`` are a series of columns, tables (or a corresponding ORM mapped class), other so-called "selectables" like aliases or subqueries, and SQL expressions
+### * Examples of ``select()`` include:
+### * SELECT from a whole table
+print(select(User))
+
+### slide:: bi
+### * SELECT from a series of columns
+print(select(User.id, User.name, User.created_at))
+
+### slide:: b
+### title:: SELECT statements - what are we SELECTing?
+### * SELECT from a series of tables/columns from more than one table
+print(select(User.name, User.fullname, Address.email_address))
+
+### slide:: bi
+### * as we see in that last statement, the FROM clause expands to include all tables we are SELECTing from
+
+### slide:: b
+### title:: SELECT statements - what are we SELECTing...FROM?
+### * When selecting from multiple tables we normally want to JOIN them together.  A straightforward way to do this is to use the ``select().join_from()`` method
+
+stmt = select(User.name, User.fullname, Address.email_address).join_from(User, Address)
+print(stmt)
+
+### slide:: bx
+### title:: SELECT statements - what are we SELECTing...FROM?
+### * ``join_from()`` will normally generate the ON criteria based on the presence of the ``ForeignKey`` construct in table metadata
+### * Recall from the "metadata" chapter that we defined User / Address roughly like this:
+
+"""
+from sqlalchemy import ForeignKey
+
+class User(Base):
+    __tablename__ = "user_account"
+    id: Mapped[int] = mapped_column(primary_key=True, init=False)
+    # ...
+
+class Address(Base):
+    __tablename__ = "address"
+    # ...
+    user_id: Mapped[int] = mapped_column(ForeignKey("user_account.id"))
+"""
+
+### slide:: bi
+### * the ``Address.user_id`` which links to ``ForeignKey("user_account.id")`` gives ``join_from()`` what it needs to know
+
 ### slide:: bp
-### title:: SELECT statements
-### * We can get more columns...
+### title:: SELECT statements - what are we SELECTing...FROM?
+### * Putting it together we can get a structured display of both tables at once
+stmt = select(User.name, User.fullname, Address.email_address).join_from(User, Address)
 
-stmt = select(User.id, User.name)
-with engine.connect() as conn:
-    print(conn.execute(stmt).all())
-
-### slide:: bp
-### title:: SELECT statements
-### * ...whole tables...
-
-stmt = select(User)
-with engine.connect() as conn:
-    print(conn.execute(stmt).all())
-
+with engine.connect() as connection:
+    result = connection.execute(stmt)
+    for row in result:
+        print(f"{row.name:15} {row.fullname:25}  {row.email_address}")
 
 ### slide:: bp
-### title:: SELECT statements
-### * multiple tables / columns with a JOIN (more on JOIN later)
+### title:: SELECT statements - we are...SELECTing!
+### * Finally, there's a whole world of more complex SELECT statements using aliases, subqueries, etc.
+### * Such as, "SELECT user names that have more than one email address"
 
-stmt = select(User, Address.email_address).join_from(User, Address)
-with engine.connect() as conn:
-    print(conn.execute(stmt).all())
+email_address_count = (
+    select(Address.user_id, func.count(Address.email_address).label('email_count')).group_by(Address.user_id).
+    having(func.count(Address.email_address) > 1).subquery()
+)
+stmt = select(User.name, email_address_count.c.email_count).join_from(User, email_address_count)
+
+with engine.connect() as connection:
+    for row in connection.execute(stmt):
+        print(f"username: {row.name} | number of email addresses: {row.email_count}")
 
 
 ### slide:: b
-### title:: WHERE criteria
+### title:: SELECT statements - limiting rows with WHERE criteria
 ### * class attributes like User.name are also the foundation of SQL expressions
 
 print(User.name == 'spongebob')
@@ -127,7 +189,7 @@ print(User.name == 'spongebob')
 
 
 ### slide:: bi
-### * the values for the parameters are embedded and come out during ``execute()``
+### * the values for the parameters are embedded and come out during ``Connection.execute()``
 ### * for demonstration, they can be seen using a utility method called ``.compile()``
 
 print(
@@ -137,13 +199,19 @@ print(
 
 
 ### slide:: b
-### title:: more WHERE criteria
+### title:: SELECT statements - limiting rows with WHERE criteria
 ### * less than, greater than
 print(User.name < 'spongebob')
 print(User.name > 'spongebob')
 
-
 ### slide:: bi
+### * fancy string operators
+
+print(User.name.icontains("spongebob"))
+
+
+### slide:: b
+### title:: SELECT statements - limiting rows with WHERE criteria
 ### * IN expressions
 
 print(
@@ -153,21 +221,19 @@ print(
     .compile(compile_kwargs={"literal_binds": True})
 )
 
-### slide:: bi
-### * fancy string operators
-
-print(User.name.icontains("spongebob"))
 
 
 ### slide:: b
-### title:: WHERE criteria, ORDER BY, etc.
+### title:: SELECT statements - limiting rows with WHERE criteria, ordering with ORDER BY
 ### * We can add these expressions as WHERE criteria using the ``.where()`` method
 
 stmt = select(User.name).where(User.name.in_(["spongebob", "sandy", "squidward"]))
+print(stmt)
 
 ### slide:: bi
-### * ``.where()`` (and most methods) can be called multiple times
+### * ``.where()`` can be called multiple times; criteria is joined by AND
 stmt = stmt.where(User.id > 1)
+print(stmt)
 
 ### slide:: b
 ### title:: WHERE criteria, ORDER BY, etc.
@@ -176,7 +242,7 @@ stmt = stmt.where(User.id > 1)
 stmt = stmt.order_by(User.id)
 
 ### slide:: b
-### title:: WHERE criteria, ORDER BY, etc.
+### title:: SELECT statements - limiting rows with WHERE criteria, ordering with ORDER BY
 ### * expressions can also be selected; below we add a column expression
 
 stmt = stmt.add_columns(literal("full name: ") + User.fullname)
@@ -186,39 +252,8 @@ stmt = stmt.add_columns(literal("full name: ") + User.fullname)
 
 with engine.connect() as conn:
     for name, fullname in conn.execute(stmt):
-        print(f"{name} {fullname}")
+        print(f"name: {name:15} {fullname}")
 
-
-### slide:: b
-### title:: FROM clauses, JOINs
-### * The FROM clause of a SELECT derives from the columns / tables we select
-
-print(select(User.name, Address.email_address))
-
-
-### slide:: bp
-### title:: FROM clauses, JOINs
-### * FROM clause in less common cases can be set manually if needed using ``.select_from()``
-
-stmt = select(func.count('*')).select_from(User)
-
-with engine.connect() as conn:
-    print(conn.scalar(stmt))
-
-
-### slide:: bp
-### title:: FROM clauses, JOINs
-### * the ``.join_from()`` method produces a basic JOIN between two tables.
-### * ON criteria for simple joins along foreign keys is usually automatic
-
-stmt = select(User.name, Address.email_address).join_from(User, Address)
-
-with engine.connect() as conn:
-    for username, email in conn.execute(stmt):
-        print(f"{username} {email}")
-
-### slide:: bi
-### * JOIN is more feature filled when working with ORM relationships, illustrated later
 
 ### slide:: b
 ### title:: UPDATE and DELETE, in brief
@@ -252,4 +287,12 @@ with engine.begin() as conn:
     conn.execute(update_stmt)
 
 
+### slide:: b
+### title:: SQL expression language - sum up
+### * The SQL expression language intends to allow **any SQL structure** to be modeled as a Python expression
+### * SQLAlchemy goes very far with this concept; topics not covered here include UNIONs, CTEs, window functions, set-returning functions, OLAP operators
+### * When writing SQLAlchemy SQL expressions, the hope is that one can be thinking in terms of SQL statements, not "translation"
+### * Using Python objects for SQL expressions allows fluid composability, database agnosticism to a greater or lesser degree
+
 ### slide::
+### * Questions?

@@ -326,7 +326,7 @@ session.commit()
 ### * It means that when the transaction is complete, all "data" is expired
 ### * When data is "expired", accessing object attributes again defaults to a behavior called **lazy loading**, i.e. refresh from the database
 ### * Refreshing from the database however needs a new transaction, so it calls upon a default behavior called **autobegin**
-### * This means touching ``spongebob.fullname`` will start a new tranasction and run a SELECT
+### * This means touching ``spongebob.fullname`` will start a new transaction and run a SELECT
 
 spongebob.fullname
 
@@ -339,39 +339,6 @@ spongebob.fullname
 ###    * Turn off autobegin:  ``session_factory = sessionmaker(engine, autobegin=False)``
 ###    * Turn off lazy-loading: Turn off expiration + autobegin, use **eager loading** patterns as well as **raiseload** patterns
 
-
-### slide:: b
-### title:: Unit of Work - Rolling back changes
-### * We illustrate another "dirty" and another "pending" change:
-
-spongebob.name = "Spongy"
-fake_user = User("fakeuser", "Invalid")
-session.add(fake_user)
-
-### slide:: bp
-### title:: Unit of Work - Rolling back changes
-### * These changes will be flushed when we run more SQL, or call ``Session.flush()``
-
-session.flush()
-
-### slide:: bp
-### title:: Unit of Work - Rolling back changes
-### * our changes are **flushed**, but they are not **committed**
-### * We can un-do both of those changes using ``Session.rollback()``
-
-session.rollback()
-
-### slide:: b
-### title:: Unit of Work - Rolling back changes
-### * In the ``Session.rollback()`` case, all data that changed is again expired
-
-### slide:: bi
-### * accessing data re-loads the old data
-spongebob.name
-
-### slide:: bi
-### * "pending" objects have been evicted from the session.
-fake_user in session
 
 
 ### slide::

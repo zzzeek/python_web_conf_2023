@@ -1,4 +1,4 @@
-# absolute minimum time 18:30
+# absolute minimum time 20:00
 
 ### slide:: s
 from sqlalchemy import create_engine
@@ -19,7 +19,7 @@ engine = create_engine("sqlite://")
 ### slide:: bi
 ### * In the above example, we made an ``Engine`` that will connect to a SQLite memory database.
 ### * We didn't actually connect yet; the ``Engine`` is instead a **factory** that makes new connections when used
-
+### * The ``Engine`` also stores a **connection pool**, where connections we use will be reused for subsequent operations
 
 ### slide:: b
 ### title:: Engine Basics - Our First Connection
@@ -79,38 +79,30 @@ row.greeting
 row._mapping["greeting"]
 
 
-### slide:: pb
-### title:: Engine Basics - Getting Results
-### * common idiomatic Python patterns including iteration and tuple assignment are common
-result = connection.execute(
-    text("select * from (values (1, 'hello'), (2, 'hola'), (3, 'bonjour'))")
-)
+### slide:: bx
+### title:: Engine Basics - Getting Results QUICKSLIDE
+### * To get lots of rows back, patterns include iteration
+for row in result:
+    print(row)
+
+### slide:: bix
+### * Tuple assignment with iteration
 for id_, greeting in result:
     print(f"id: {id_}   greeting: {greeting}")
 
-### slide:: pb
-### title:: Engine Basics - Getting Results
-### * for the very common case of getting an iterator of single values, the ``Connection.scalars()`` or ``Result.scalars()`` methods are recommended
-for greeting in connection.scalars(
-    text("select * from (values ('hello'), ('hola'), ('bonjour'))")
-):
+### slide:: bix
+### * Iterate through first column of each row
+for greeting in result.scalars():
     print(f"greeting: {greeting}")
 
-### slide:: pb
-### title:: Engine Basics - Getting Results
-### * there's also other methods like ``.all()``.
-result = connection.execute(
-    text("select * from (values (1, 'hello'), (2, 'hola'), (3, 'bonjour'))")
-)
-result.all()
+### slide:: bix
+### * get all rows in a list
+list_of_rows = result.all()
 
-### slide:: pb
-### title:: Engine Basics - Getting Results
-### * ``.all()`` and other result methods work with ``.scalars()`` too
-scalar_result = connection.scalars(
-    text("select * from (values ('hello'), ('hola'), ('bonjour'))")
-)
-scalar_result.all()
+### slide:: bix
+### * get all first columns in a list
+list_of_scalars = result.scalars().all()
+
 
 ### slide:: b
 ### title:: Engine Basics - Closing Connections

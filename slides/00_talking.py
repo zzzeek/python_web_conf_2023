@@ -1,4 +1,4 @@
-# absolute minimum time 6:47
+# absolute minimum time 10:00
 
 ### slide::
 # !!{reset}  ▄█▀▀▀▄█   ▄▄█▀▀██   ▀██▀      !!{red}    █     ▀██          ▀██                                      !!{yellow} ██        ▄█▄
@@ -31,10 +31,7 @@
 ###     * Database schema management functions
 ###     * a SQL query builder
 ###     * Schema inspection utilities
-###     * sleepless devs (yes there are more of me now) answering questions 24/7
 ### * All of the above features that aren't "ORM" are called **SQLAlchemy Core**
-### * The most curmudgeonly DBA should have no problem with all the things that are in Core
-### * but alas, they are curmudgeonly....
 
 ### slide:: b
 ### title:: SQLAlchemy 2.0 - Brief History
@@ -59,8 +56,10 @@
 ###      * Integrate "baked" (SQL cached) queries within all statements across Core / ORM
 ###      * Implement pep-484 typing, first as stubs as well as a mypy plugin
 ###      * asyncio support using "stackless" (i.e. greenlet) technique
+###      * 1.x -> 2.0 migration process using SQLALCHEMY_WARN_20=1 mode
 ###      * all "early" goals were released in SQLAlchemy 1.4
-###      * 1.4.0 was November, 2020 (at 1.4.46 or so now)
+###      * 1.4.0b1 was November, 2020 (at 1.4.46 or so now)
+###     * Got all the "risky" features out to the userbase, regressions were fixed, heavy lifting was done
 
 
 ### slide:: b
@@ -74,26 +73,7 @@
 ###      * High performance bulk INSERT feature for all backends
 ###      * Rearchitecture of Schema Reflection
 ###      * migrate C code to Cython
-
-
-### slide:: b
-### title:: SQLAlchemy 1.4 and 2.0 - How did it go?
-### * SQLAlchemy 1.4
-###     * Implemented all the "top level" and "early emergent" goals
-###     * Core / ORM execution model *completely* rewritten for ``select()`` unification, caching
-###     * New 2.0 APIs presented in a fully "opt-in" way
-###     * SQLALCHEMY_WARN_20=1 mode, inspired by 2to3
-###     * Had all the "risky" features, very long regression period as we fixed statement caching / ORM Query regressions
-
-### slide:: b
-### title:: SQLAlchemy 1.4 and 2.0 - How did it go?
-### * SQLAlchemy 2.0
-###     * With all the heavy lifting done in 1.4 and released for ongoing battle testing, we could then work on "lighter" things
-###     * Remove all Python 2 code (hooray!)
-###     * totally new pep-484 inline typing
-###     * new ORM Declarative that works with pep-484
-###     * Dataclasses ORM integration
-###     * other "late emergent" features: new bulk INSERT, schema reflection, Cython
+###      * SQLAlchemy 2.0b1 was released October, 2022
 
 
 ### slide:: b
@@ -105,13 +85,6 @@
 ###      * Basic OOP terminology: classes, instances, methods, etc.
 ###      * Rudimentary SQL knowledge - run a SELECT statement, run an INSERT, run a CREATE TABLE
 ###      * Helpful: awareness of transactions and maybe the ACID model
-
-### slide:: b
-### title:: The tutorial
-### * What about veteran SQLAlchemy users?
-### * The descriptions of foundational concepts has evolved for many years
-### * I continue to learn myself what it is we are doing and hopefully express it more clearly
-### * A clear view of foundational topics informs how all the bells and whistles work too
 
 ### slide:: b
 ### title:: Onto the Tutorial!

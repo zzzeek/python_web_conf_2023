@@ -50,7 +50,7 @@ class Base(MappedAsDataclass, DeclarativeBase):
     pass
 
 ### slide:: bi
-### * When we make subclasses of Base, it generates an ORM mapped class that will refer to a database table
+### * When we make subclasses of Base, it generates an **ORM mapped class** that will refer to a database table
 ### * The ``MappedAsDataclass`` mixin is optional and indicates that the classes should also be Python dataclasses
 
 ### slide:: b

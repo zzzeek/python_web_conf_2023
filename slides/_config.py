@@ -5,7 +5,7 @@ import sys
 from sliderepl import Deck
 
 banner_top = (
-    "!!{letstalk} ░░░░░░░░░░░░░▒▒▒▒▒▒▒▒▒▒▒▒▒█████████████"
+    "!!{letstalk}░░░░░░░░░░░░░▒▒▒▒▒▒▒▒▒▒▒▒▒█████████████"
     "!!{logo1} SQL!!{logo2}Alchemy !!{logo3}2.0"
     "!!{letstalkul} - Let's Talk "
     "!!{letstalk}█████████████▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░"
@@ -33,6 +33,9 @@ class SADeck(Deck):
         "letstalkul": ("blue", "on_light_grey", ["bold"]),
 
     }
+
+    min_banner_width = 106
+    bullet_width = 100
 
     expose = Deck.expose + ("echo",)
 
