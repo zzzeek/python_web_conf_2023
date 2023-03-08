@@ -256,41 +256,9 @@ with engine.connect() as conn:
 
 
 ### slide:: b
-### title:: UPDATE and DELETE, in brief
-### * as a brief preview, UPDATE and DELETE statements have a target table like an INSERT...
-
-from sqlalchemy import delete
-from sqlalchemy import update
-
-delete_stmt = delete(User)
-update_stmt = update(User)
-
-### slide:: bi
-### * both have WHERE clauses like SELECT...
-
-delete_stmt = delete_stmt.where(User.name == "krabs")
-update_stmt = update_stmt.where(User.name == "patrick")
-
-
-### slide:: bi
-### * UPDATE additionally has "values" like INSERT, which is how we do the SET clause
-
-update_stmt = update_stmt.values(fullname="Patrick Star")
-
-
-### slide:: bp
-### title:: UPDATE and DELETE, in brief
-### * UPDATE and DELETE, like INSERT, need a ``.begin()`` block or ``.commit()`` to take effect
-
-with engine.begin() as conn:
-    conn.execute(delete_stmt)
-    conn.execute(update_stmt)
-
-
-### slide:: b
 ### title:: SQL expression language - sum up
 ### * The SQL expression language intends to allow **any SQL structure** to be modeled as a Python expression
-### * SQLAlchemy goes very far with this concept; topics not covered here include UNIONs, CTEs, window functions, set-returning functions, OLAP operators
+### * SQLAlchemy goes very far with this concept; topics not covered here include UPDATE, DELETE, UNIONs, CTEs, window functions, set-returning functions, JSON functions, SQL datatypes
 ### * When writing SQLAlchemy SQL expressions, the hope is that one can be thinking in terms of SQL statements, not "translation"
 ### * Using Python objects for SQL expressions allows fluid composability, database agnosticism to a greater or lesser degree
 

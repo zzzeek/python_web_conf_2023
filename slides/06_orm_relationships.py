@@ -173,3 +173,6 @@ session.new
 ### slide:: p
 # commit.
 session.commit()
+
+
+### slide::

@@ -171,19 +171,6 @@ with engine.connect() as connection:
  # end of outer block: releases connection to the connection pool
 
 
-### slide:: bp
-### title:: Engine Basics - Transactions, Committing
-### * To use autocommit, this is enabled as an **execution option** on the ``Connection`` or ``Engine``
-### * The programming patterns and code structure **do not change** at all
-### * There is still a client-side notion of a "transaction".
-### * The DBAPI driver COMMITs all statements implicitly
-
-with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
-    connection.execute(
-        insert_stmt,
-        {"name": "squidward", "fullname": "Squidward Q. Tentacles"}
-    )
-
 
 ### slide::
 ### title:: Questions?
