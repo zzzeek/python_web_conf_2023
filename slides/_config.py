@@ -26,6 +26,7 @@ class SADeck(Deck):
         "yellow": ("yellow",),
         "letstalk": ("blue", None, []),
         "plain": (),
+        "bold": ("black", None, ["bold"]),
 
         "logo1": ("dark_grey", "on_light_grey", ["bold"]),
         "logo2": ("red", "on_light_grey", ["bold"]),

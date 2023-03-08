@@ -88,7 +88,7 @@ class User(Base):
 ### * and Address.user, which is a reference to a User object.
 
 """
-class Address(Base, unsafe_hash=True):
+class Address(Base):
 
     # ... non-running-example...
 
@@ -106,9 +106,25 @@ class Address(Base, unsafe_hash=True):
 ### * When dealing with one-to-many or many-to-one, the table with the **foreign key CONSTRAINT is on the "many" side**
 ### * The table that has the **primary key column(s) that the foreign key points to is on the "one" side**
 
+### slide:: b
+### title:: Using relationship at the class level in queries
+### * Recall how we used ``join_from()`` to join between User and Address:
+from sqlalchemy import select
+print(select(User.name, Address.email_address).join_from(User, Address))
+
+### slide:: bi
+### * The above JOIN uses the ``ForeignKey()`` on ``Address``
+### * With ``relationship()``, we can join more succinctly and specifically using ``select().join()`` with the class-bound attribute
+print(select(User.name, Address.email_address).join(User.addresses))
+
+
+### slide:: bi
+### * ``relationship()`` does a lot more than that for queries, however ``.join()`` is the most common usage
+
+
 ### slide:: bx
 ### title:: relationships - back_populates
-### * Note also that each ``relationship()`` has an attribute name, and a ``back_populates`` naming the other direction
+### * Each ``relationship()`` has an attribute name, and a ``back_populates`` naming the other direction
 
 """
 class User(Base):
@@ -119,7 +135,7 @@ class User(Base):
         back_populates="user", default_factory=list
     )
 
-class Address(Base, unsafe_hash=True):
+class Address(Base):
 
     # ... non-running-example...
 
@@ -129,32 +145,33 @@ class Address(Base, unsafe_hash=True):
 
 ### slide:: bi
 ### * ``back_populates`` indicates that these two relationships will be kept in sync with each other
+### * ``back_populates`` is optional, but if two relationships are mirrors of one another, it should be included
 
 
 ### slide:: b
 ### title:: Creating instances with relationships
 ### * First create a User object as we always have
 
-squidward = User("squidward", "Squidward Tentacles")
+mr_krabs = User("krabs", "Mr. Krabs")
 
 ### slide:: bi
 ### * The User object has a default list that we've given it, which is empty
 
-squidward.addresses
+mr_krabs.addresses
 
 
 ### slide:: bi
 ### * Let's then make three Address objects
 
 a1, a2, a3 = (
-    Address(email_address="squidward@gmail.com"),
-    Address(email_address="s25@yahoo.com"),
-    Address(email_address="squidward@hotmail.com")
+    Address(email_address="krabs@gmail.com"),
+    Address(email_address="k25@yahoo.com"),
+    Address(email_address="krabs@hotmail.com")
 )
 
 ### slide:: bi
-### We can add these to the squidward.addresses list (or replace the list)
-squidward.addresses.extend([a1, a2, a3])
+### We can add these to the mr_krabs.addresses list (or replace the list)
+mr_krabs.addresses.extend([a1, a2, a3])
 
 ### slide::
 # "back populates" sets up Address.user for each User.address.
@@ -167,12 +184,24 @@ a2.user
 
 session = session_factory()
 
-session.add(squidward)
+session.add(mr_krabs)
 session.new
 
 ### slide:: p
 # commit.
 session.commit()
+
+
+### slide:: bp
+### title:: Relationships load themselves on instances
+### * When we access an unloaded relationship, the default behavior it uses is **lazy load**
+
+mr_krabs.addresses
+
+### slide:: bi
+### * The lazy load is both useful and problematic, depending on context
+### * The ORM query guide has a comprehensive section on **eager loading** and other relationship loading techniques, at https://docs.sqlalchemy.org/en/20/orm/queryguide/relationships.html
+
 
 
 ### slide::

@@ -14,6 +14,11 @@
 #
 #                           !!{letstalk} ░░░░░░▒▒▒▒▒▒██████ Presenter: Mike Bayer ██████▒▒▒▒▒▒░░░░░░
 #                                 !!{letstalk} ░░░░░░▒▒▒▒▒▒██████ PWC  2023 ██████▒▒▒▒▒▒░░░░░░
+#
+#                                   Download this entire interactive tutorial at:
+#
+#                                   !!{bold}https://github.com/zzzeek/python_web_conf_2023
+#
 # !!{reset}
 
 
@@ -85,6 +90,16 @@
 ###      * Basic OOP terminology: classes, instances, methods, etc.
 ###      * Rudimentary SQL knowledge - run a SELECT statement, run an INSERT, run a CREATE TABLE
 ###      * Helpful: awareness of transactions and maybe the ACID model
+
+### slide:: b
+### title:: Ridiculously important links
+### * We are trying **very hard** to make the most important documentation findable
+### * #1 issue, user "could not find" documentation
+### * Here are the most important links (download this talk from github to copy)
+###     * **Documentation index:** https://docs.sqlalchemy.org/
+###     * **Quickstart:** https://docs.sqlalchemy.org/en/latest/orm/quickstart.html
+###     * **Unified Tutorial:** https://docs.sqlalchemy.org/en/latest/tutorial/index.html
+###     * **ORM Querying Guide:** https://docs.sqlalchemy.org/en/latest/orm/queryguide/index.html
 
 ### slide:: b
 ### title:: Onto the Tutorial!

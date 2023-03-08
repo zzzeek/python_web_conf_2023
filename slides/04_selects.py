@@ -41,7 +41,6 @@ with engine.begin() as conn:
             {"name": "spongebob", "fullname": "Spongebob Squarepants"},
             {"name": "sandy", "fullname": "Sandy Cheeks"},
             {"name": "patrick", "fullname": "Patrick Star"},
-            {"name": "squidward", "fullname": "Squidward Q Tentacles"},
             {"name": "pearl", "fullname": "Pearl Krabs"},
             {"name": "krabs", "fullname": "Mr. Krabs"},
         ],
@@ -51,8 +50,8 @@ with engine.begin() as conn:
         [
             {"user_id": uids[0], "email_address": "spongebob@sqlalchemy.org"},
             {"user_id": uids[1], "email_address": "sandy@sqlalchemy.org"},
-            {"user_id": uids[1], "email_address": "pat999@aol.com"},
-            {"user_id": uids[2], "email_address": "stentcl@sqlalchemy.org"},
+            {"user_id": uids[1], "email_address": "sandy@squirrelpower.org"},
+            {"user_id": uids[2], "email_address": "pat999@aol.com"},
         ]
     )
 
@@ -215,7 +214,7 @@ print(User.name.icontains("spongebob"))
 ### * IN expressions
 
 print(
-    User.name.in_(["spongebob", "sandy", "squidward"])
+    User.name.in_(["spongebob", "sandy", "krabs"])
 
     # this is so we can see the full expression
     .compile(compile_kwargs={"literal_binds": True})
@@ -227,7 +226,7 @@ print(
 ### title:: SELECT statements - limiting rows with WHERE criteria, ordering with ORDER BY
 ### * We can add these expressions as WHERE criteria using the ``.where()`` method
 
-stmt = select(User.name).where(User.name.in_(["spongebob", "sandy", "squidward"]))
+stmt = select(User.name).where(User.name.in_(["spongebob", "sandy", "krabs"]))
 print(stmt)
 
 ### slide:: bi
@@ -253,6 +252,39 @@ stmt = stmt.add_columns(literal("full name: ") + User.fullname)
 with engine.connect() as conn:
     for name, fullname in conn.execute(stmt):
         print(f"name: {name:15} {fullname}")
+
+### slide:: b
+### title:: Bonus Section: UPDATE and DELETE, in brief
+### * as a brief preview, UPDATE and DELETE statements have a target table like an INSERT...
+
+from sqlalchemy import delete
+from sqlalchemy import update
+
+delete_stmt = delete(User)
+update_stmt = update(User)
+
+### slide:: bi
+### * both have WHERE clauses like SELECT...
+
+delete_stmt = delete_stmt.where(User.name == "krabs")
+update_stmt = update_stmt.where(User.name == "patrick")
+
+
+### slide:: bi
+### * UPDATE additionally has "values" like INSERT, which is how we do the SET clause
+
+update_stmt = update_stmt.values(fullname="Patrick Star")
+
+
+### slide:: bp
+### title:: UPDATE and DELETE, in brief
+### * UPDATE and DELETE, like INSERT, need a ``.begin()`` block or ``.commit()`` to take effect
+
+with engine.begin() as conn:
+    conn.execute(delete_stmt)
+    conn.execute(update_stmt)
+
+
 
 
 ### slide:: b
