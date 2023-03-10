@@ -116,7 +116,7 @@ result = session.execute(text("select 'hello world'"))
 ### slide:: bi
 ### * ``Session.execute()`` returns a ``Result`` object, just like ``Connection.execute()`` does as well.
 
-print(result.one())
+print(result.first())
 
 ### slide:: bp
 ### title:: Session is connected, now what?
@@ -226,7 +226,7 @@ result = session.execute(select_statement)
 ### title:: Unit of work patterns with the Session
 ### * The ``Result`` that we get back from ``Session.execute()`` has a single row
 
-row = result.one()
+row = result.first()
 
 ### slide:: bi
 ### * within this row, the ``User`` we selected is a single column value
@@ -345,6 +345,7 @@ spongebob.fullname
 ### title:: Questions!
 
 
+### slide::
 
 
 

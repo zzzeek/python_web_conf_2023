@@ -58,43 +58,40 @@ with engine.begin() as conn:
 
 ### slide:: b
 ### title:: SELECT statements
-### * In the section on executing statements with an ``Engine``, we ran a ``text()`` construct that looked like this:
+### * In the section on executing statements with an ``Engine``, we introduced the ``text()`` construct
 
 from sqlalchemy import text
-stmt = text("select 'hello world' as greeting")
+stmt = text("SELECT name FROM user_account")
 
-### slide:: bi
-### * let's write that instead using SQLAlchemy's Core expression language, using a construct called ``select()``.
-### * In order to select a literal value like "hello world" we will also use a construct called ``literal()``.
-
-from sqlalchemy import select, literal
-
-stmt = select(
-    literal("hello world").label("greeting")
-)
-
-### slide:: bp
-### title:: SELECT statements
-### * As we did previously with ``text()``, we can run this statement using ``Connection.execute()``
+### slide:: bip
+### * We illustrated how text() can be executed with ``connection.execute()`` in order to return a result set
 
 with engine.connect() as connection:
-    result = connection.execute(stmt)
-    print(result.first())
-
-### slide:: bi
-### * note that ``literal()`` automatically made the use of a bound parameter for the string "hello world".  Most SQLAlchemy SQL constructs will automatically use bound values as much as possible.
+    for row in connection.execute(stmt):
+        print(row.name)
 
 ### slide:: b
 ### title:: SELECT statements
-### * While selecting a plain string seemed a bit cumbersome, usually we are using ``select()`` to SELECT from tables and columns
+### * let's write that instead using SQLAlchemy's Core expression language, using a construct called ``select()``.
 ### * As we are using ORM-Centric table metadata, the class-bound attributes on ORM models represent SQL Columns, such as ``User.name`` below, which we can SELECT from.
 
+from sqlalchemy import select
 stmt = select(User.name)
 
 ### slide:: bi
 ### * The above statement means, "select the 'name' column from the 'user_account' table"
 
 print(stmt)
+
+
+### slide:: bp
+### title:: SELECT statements
+### * As we did previously with ``text()``, we can run this statement using ``Connection.execute()``
+
+with engine.connect() as connection:
+    for row in connection.execute(stmt):
+        print(row.name)
+
 
 ### slide:: b
 ### title:: SELECT statements - what are we SELECTing?
@@ -252,39 +249,6 @@ stmt = stmt.add_columns(literal("full name: ") + User.fullname)
 with engine.connect() as conn:
     for name, fullname in conn.execute(stmt):
         print(f"name: {name:15} {fullname}")
-
-### slide:: b
-### title:: Bonus Section: UPDATE and DELETE, in brief
-### * as a brief preview, UPDATE and DELETE statements have a target table like an INSERT...
-
-from sqlalchemy import delete
-from sqlalchemy import update
-
-delete_stmt = delete(User)
-update_stmt = update(User)
-
-### slide:: bi
-### * both have WHERE clauses like SELECT...
-
-delete_stmt = delete_stmt.where(User.name == "krabs")
-update_stmt = update_stmt.where(User.name == "patrick")
-
-
-### slide:: bi
-### * UPDATE additionally has "values" like INSERT, which is how we do the SET clause
-
-update_stmt = update_stmt.values(fullname="Patrick Star")
-
-
-### slide:: bp
-### title:: UPDATE and DELETE, in brief
-### * UPDATE and DELETE, like INSERT, need a ``.begin()`` block or ``.commit()`` to take effect
-
-with engine.begin() as conn:
-    conn.execute(delete_stmt)
-    conn.execute(update_stmt)
-
-
 
 
 ### slide:: b

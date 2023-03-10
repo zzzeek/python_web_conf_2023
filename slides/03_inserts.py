@@ -108,24 +108,4 @@ with engine.begin() as conn:
     )
 
 
-### slide:: bp
-### title:: Bonus Slide: SQLAlchemy 2.0 is very good at RETURNING
-### * There's more INSERT can do
-### * But here we will just illustrate a fairly exciting new feature in SQLAlchemy 2.0
-### * Insert lots of rows with RETURNING at the same time (on almost every backend)
-
-with engine.begin() as conn:
-    result = conn.execute(
-        insert(User).returning(User),
-        [
-            {"name": "squidward", "fullname": "Squidward Q Tentacles"},
-            {"name": "pearl", "fullname": "Pearl Krabs"},
-            {"name": "krabs", "fullname": "Mr. Krabs"},
-        ],
-    )
-
-    for row in result:
-        print(f"New user added: {row.name}  Timestamp: {row.created_at}")
-
-
 ### slide::
