@@ -29,7 +29,8 @@ Installation
 
 2. Install using virtualenv and pip:
 
-  $ git clone https://github.com/zzzeek/sqla_mini_tutorial
+  $ git clone https://github.com/zzzeek/python_web_conf_2023
+  $ cd python_web_conf_2023
   $ virtualenv .venv
   $ source .venv/bin/activate
   $ pip install .

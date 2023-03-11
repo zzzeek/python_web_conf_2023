@@ -15,7 +15,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "sqlalchemy==2.0.2",
+    "sqlalchemy>=2.0.5",
     "sliderepl @ https://github.com/zzzeek/sliderepl/archive/refs/heads/master.zip",
     "pygments",
 ]
@@ -27,5 +27,5 @@ exclude = ["*"]
 slides = "slides"
 
 [project.urls]
-"Homepage" = "https://github.com/zzzeek/sqla_mini_tutorial"
+"Homepage" = "https://github.com/zzzeek/python_web_conf_2023"
 
