@@ -140,7 +140,7 @@ with engine.begin() as conn:
 ### title:: Core SQL (using ORM models)
 ### * The next two sections will illustrate the use of these ORM Models to create SQL statements
 ### * However, for SQLAlchemy veterans, note we are going to start with **Core only** use
-### * We'll run INSERT, SELECT, UPDATE, DELETE queries using ``Connection`` only, plain rows for results
+### * We'll run INSERT, SELECT, and (in theory, if we had more slides) UPDATE and DELETE queries using ``Connection`` only, plain rows for results
 ### * Later, we will pull in the ORM ``Session``
 
 

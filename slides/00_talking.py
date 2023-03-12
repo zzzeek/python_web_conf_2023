@@ -12,7 +12,8 @@
 #                               !!{letstalk}     █    █▀▀  █    ▀▀▄     █   █▄▄█ █  █▀▄   █
 #                               !!{letstalk}     █▄▄█ ▀▀▀  ▀    ▀▀▀     █   █  █ ▀▀ ▀ ▀   ▄
 #
-#                           !!{letstalk} ░░░░░░▒▒▒▒▒▒██████ Presenter: Mike Bayer ██████▒▒▒▒▒▒░░░░░░
+#                     !!{letstalk} ░░░░░░▒▒▒▒▒▒██████       Presenter: Mike Bayer       ██████▒▒▒▒▒▒░░░░░░
+#                           !!{letstalk} ░░░░░░▒▒▒▒▒▒██████ @zzzeek@fosstodon.org ██████▒▒▒▒▒▒░░░░░░
 #                                 !!{letstalk} ░░░░░░▒▒▒▒▒▒██████ PWC  2023 ██████▒▒▒▒▒▒░░░░░░
 #
 #                                   Download this entire interactive tutorial at:
@@ -60,7 +61,6 @@
 
 ### slide:: b
 ### title:: Onto the Tutorial!
-### * any Q ?
 
 
 ### slide::
