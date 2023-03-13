@@ -241,6 +241,7 @@ stmt = stmt.order_by(User.id)
 ### title:: SELECT statements - limiting rows with WHERE criteria, ordering with ORDER BY
 ### * expressions can also be selected; below we add a column expression
 
+from sqlalchemy import literal
 stmt = stmt.add_columns(literal("full name: ") + User.fullname)
 
 ### slide:: bip

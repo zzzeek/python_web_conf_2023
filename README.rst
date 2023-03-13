@@ -20,20 +20,20 @@ are installed):
 Installation
 ------------
 
-1. Dependencies:
+1. Dependencies::
 
     python 3.7 or higher (3.10 or 3.11 preferred)
     git
     pip
     virtualenv
 
-2. Install using virtualenv and pip:
+2. Install using virtualenv and pip::
 
-  $ git clone https://github.com/zzzeek/python_web_conf_2023
-  $ cd python_web_conf_2023
-  $ virtualenv .venv
-  $ source .venv/bin/activate
-  $ pip install .
+    $ git clone https://github.com/zzzeek/python_web_conf_2023
+    $ cd python_web_conf_2023
+    $ virtualenv .venv
+    $ source .venv/bin/activate
+    $ pip install .
 
 3. Run slides::
 
